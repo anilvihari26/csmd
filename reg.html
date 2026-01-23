@@ -1,0 +1,154 @@
+
+reg.html
+
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <title>Page Title</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <link rel='stylesheet' type='text/css' media='screen' href='main.css'>
+    <script src='main.js'></script>
+    <style>
+        fieldset{
+            left: 25%;
+            position: absolute;
+            height: 50%;
+            width: 50%;
+            background-color: burlywood;
+            text-align: center;
+            align-items: center;
+        }
+        legend{
+            border: solid;
+            left: auto;
+            right: auto;
+            align-items: center;
+        }table{
+            align-items: center;
+            border: solid;
+        }
+        
+    </style>
+    <script>
+        function fv(){
+            var un1=document.rf.un.value;
+            var ufn1=document.rf.ufn.value;
+            var pn1=document.rf.pn.value;
+            var dob1=document.rf.dob.value;
+	    var add1=document.rf.address.value;
+	    
+            var pass1=document.rf.pass.value;
+            var cpass1=document.rf.cpass.value;
+            if(un1.length<3)
+            {
+                alert("3 l");
+                return false;
+            }
+            else if(ufn1.length<3){
+                alert("3 l");
+                return false;
+            }
+            else if(pn1.length!=10)
+            {
+                alert("10 n");
+                return false;
+            }
+	    else if(add1.length>8){
+		alert("8 l");
+		return false;
+		}
+            else if(pass1!=cpass1){
+                alert("p&cp m b s");
+                return false;
+            }
+            else{
+                return true;
+            }
+
+        }
+    </script>
+</head>
+<body><fieldset><legend>REG</legend>
+    <form action="login.html" name="rf" onsubmit="return fv()" >
+        <table>
+            <tr>
+                <td><label>name</label></td>
+                <td><input type="text" name="un" required></td>
+            </tr>
+            <tr>
+                <td><label>fname</label></td>
+                <td><input type="text" name="ufn" required></td>
+            </tr>
+            <tr>
+                <td><label>ph.no</label></td>
+                <td><input type="number" name="pn" required></td>
+            </tr>
+            <tr>
+                <td><label>DOB</label></td>
+                <td><input type="date" name="dob" required></td>
+            </tr><tr>
+                <td><label>gender</label></td>
+                <td><label>male</label>
+                    <input type="radio" name="g" value="male">
+                    <label>female</label>
+                        <input type="radio" name="g" value="female"></td>
+            </tr><tr>
+            <td><label>email</label></td>
+               <td><input type="email" name="email" required></td>
+            </tr>
+            <tr>
+		<td><label>address</label></td>
+		<td><input type="address" name="address" required</td>
+		</tr>
+		
+		<tr>
+  <td><label>state</label></td>
+  <td>
+    <input list="states" name="st" placeholder="Select or type state" required>
+    <datalist id="states">
+      <option value="Andhra Pradesh">
+      <option value="Arunachal Pradesh">
+      <option value="Assam">
+      <option value="Bihar">
+      <option value="Karnataka">
+      <option value="Kerala">
+      <option value="Tamil Nadu">
+      <option value="Telangana">
+    </datalist>
+  </td>
+</tr>
+<tr>
+  <td><label>country</label></td>
+  <td>
+    <input list="countries" name="ct" placeholder="Select or type country" required>
+    <datalist id="countries">
+      <option value=india>
+      <option value="china">
+      <option value="rassia">
+      <option value="usa">
+      <option value="canada">
+      <option value="australia">
+      <option value="newzland">
+      <option value="sri lanka">
+      <option value="japan">
+    </datalist>
+  </td>
+</tr>
+
+
+
+                <tr>
+                    <td><label>cpassword</label></td>
+                      <td><input type="password" name="cpass" required></td>
+                    </tr>
+                    <tr>
+                           <td> <input type="submit" value="submit"></td>
+                            <td><input type="reset" name="reset"></td>
+                            
+        </table>
+    </form></fieldset>
+</body>
+</html>

@@ -1,0 +1,3756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SafeGuard - Public Safety App</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <style>
+        :root {
+            --primary: #1E3A5F;
+            --secondary: #2ECC71;
+            --accent: #E74C3C;
+            --background: #F8F9FA;
+            --card-bg: #FFFFFF;
+            --text-primary: #2C3E50;
+            --text-secondary: #7F8C8D;
+            --shadow: 0 4px 20px rgba(0,0,0,0.1);
+            --shadow-hover: 0 8px 30px rgba(0,0,0,0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Open Sans', sans-serif;
+            background: var(--background);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3, h4 {
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--primary), #2C5282);
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+        }
+
+        .logo i {
+            font-size: 28px;
+            color: var(--secondary);
+        }
+
+        .logo h1 {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        /* Language Modal */
+        .language-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--primary), #2C5282);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .language-modal.hidden {
+            display: none;
+        }
+
+        .language-content {
+            background: white;
+            border-radius: 20px;
+            padding: 32px;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .language-header {
+            margin-bottom: 24px;
+        }
+
+        .language-header i {
+            font-size: 60px;
+            color: var(--primary);
+            margin-bottom: 16px;
+        }
+
+        .language-header h2 {
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+
+        .language-header p {
+            color: var(--text-secondary);
+        }
+
+        .language-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .language-option {
+            padding: 14px;
+            border: 2px solid #E0E0E0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+        }
+
+        .language-option:hover {
+            border-color: var(--primary);
+            background: rgba(30, 58, 95, 0.05);
+        }
+
+        .language-option.selected {
+            border-color: var(--secondary);
+            background: rgba(46, 204, 113, 0.1);
+        }
+
+        .language-option .lang-name {
+            font-weight: 600;
+            color: var(--text-primary);
+            display: block;
+        }
+
+        .language-option .lang-native {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        /* Chatbot */
+        .chatbot-toggle {
+            position: fixed;
+            bottom: 100px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), #2C5282);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(30, 58, 95, 0.4);
+            z-index: 1000;
+            transition: transform 0.3s ease;
+        }
+
+        .chatbot-toggle:hover {
+            transform: scale(1.1);
+        }
+
+        .chatbot-container {
+            position: fixed;
+            bottom: 170px;
+            right: 20px;
+            width: 350px;
+            height: 450px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            z-index: 1001;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chatbot-container.active {
+            display: flex;
+        }
+
+        .chatbot-header {
+            background: linear-gradient(135deg, var(--primary), #2C5282);
+            color: white;
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+        }
+
+        .chatbot-header button {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+        }
+
+        .chatbot-messages {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .chatbot-msg {
+            max-width: 80%;
+            padding: 10px 14px;
+            border-radius: 16px;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .chatbot-msg.bot {
+            background: #E8F4FD;
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
+
+        .chatbot-msg.user {
+            background: var(--primary);
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+
+        .chatbot-input {
+            padding: 12px;
+            border-top: 1px solid #E0E0E0;
+            display: flex;
+            gap: 8px;
+        }
+
+        .chatbot-input input {
+            flex: 1;
+            padding: 10px 14px;
+            border: 2px solid #E0E0E0;
+            border-radius: 25px;
+            font-size: 14px;
+        }
+
+        .chatbot-input input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .chatbot-input button {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: none;
+            background: var(--primary);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .chatbot-input button:hover {
+            background: #2C5282;
+        }
+
+        .chatbot-input button.listening {
+            background: var(--accent);
+            animation: pulse 1s infinite;
+        }
+
+        .chatbot-options {
+            padding: 12px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            border-top: 1px solid #E0E0E0;
+        }
+
+        .chatbot-options button {
+            padding: 8px 12px;
+            border: 1px solid var(--primary);
+            background: white;
+            color: var(--primary);
+            border-radius: 20px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .chatbot-options button:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* Weather Widget */
+        .weather-widget {
+            background: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .weather-widget .section-header {
+            padding: 16px 20px 0;
+        }
+
+        .weather-content {
+            padding: 16px 20px 20px;
+        }
+
+        .weather-main {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .weather-icon {
+            font-size: 60px;
+        }
+
+        .weather-temp {
+            font-size: 48px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .weather-temp span {
+            font-size: 24px;
+            font-weight: 400;
+        }
+
+        .weather-desc {
+            font-size: 18px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            text-transform: capitalize;
+        }
+
+        .weather-location {
+            font-size: 14px;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .weather-details {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            padding-top: 16px;
+            border-top: 1px solid #eee;
+        }
+
+        .weather-detail-item {
+            text-align: center;
+        }
+
+        .weather-detail-item i {
+            font-size: 20px;
+            color: var(--primary);
+            margin-bottom: 4px;
+        }
+
+        .weather-detail-item .label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            display: block;
+        }
+
+        .weather-detail-item .value {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .weather-alert {
+            background: linear-gradient(135deg, #E74C3C, #C0392B);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 10px;
+            margin-top: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .weather-alert i {
+            font-size: 20px;
+        }
+
+        .weather-alert .alert-text {
+            font-size: 13px;
+        }
+
+        .weather-loading {
+            text-align: center;
+            padding: 30px;
+        }
+
+        .weather-loading i {
+            font-size: 32px;
+            color: var(--primary);
+        }
+
+        .weather-loading p {
+            margin-top: 10px;
+            color: var(--text-secondary);
+        }
+
+        .menu-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 8px;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            right: -300px;
+            width: 300px;
+            height: 100vh;
+            background: var(--card-bg);
+            box-shadow: -5px 0 30px rgba(0,0,0,0.2);
+            z-index: 1001;
+            transition: right 0.3s ease;
+            padding-top: 80px;
+        }
+
+        .sidebar.active {
+            right: 0;
+        }
+
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            padding: 16px;
+        }
+
+        .sidebar-menu li {
+            margin-bottom: 8px;
+        }
+
+        .sidebar-menu a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            color: var(--text-primary);
+            text-decoration: none;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .sidebar-menu a:hover, .sidebar-menu a.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .sidebar-menu a i {
+            width: 24px;
+            text-align: center;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            padding: 24px;
+            padding-bottom: 100px;
+        }
+
+        .page {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--card-bg);
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0;
+            z-index: 999;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 12px;
+            padding: 8px 16px;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: none;
+            border: none;
+        }
+
+        .nav-item i {
+            font-size: 20px;
+        }
+
+        .nav-item.active {
+            color: var(--primary);
+            background: rgba(30, 58, 95, 0.1);
+        }
+
+        .nav-item:hover {
+            color: var(--primary);
+        }
+
+        /* Home Page */
+        .sos-section {
+            text-align: center;
+            padding: 40px 0;
+        }
+
+        .sos-btn {
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            background: linear-gradient(145deg, var(--accent), #C0392B);
+            border: none;
+            color: white;
+            font-size: 20px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 10px 40px rgba(231, 76, 60, 0.4);
+            transition: all 0.3s ease;
+            animation: pulse 2s infinite;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sos-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 15px 50px rgba(231, 76, 60, 0.5);
+        }
+
+        .sos-btn:active {
+            animation: none;
+            transform: scale(0.95);
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 10px 40px rgba(231, 76, 60, 0.4); }
+            50% { box-shadow: 0 10px 60px rgba(231, 76, 60, 0.6); }
+        }
+
+        .sos-btn i {
+            font-size: 40px;
+            margin-bottom: 4px;
+        }
+
+        .sos-hint {
+            margin-top: 16px;
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-top: 32px;
+        }
+
+        .action-card {
+            background: var(--card-bg);
+            padding: 20px 16px;
+            border-radius: 16px;
+            text-align: center;
+            box-shadow: var(--shadow);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .action-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .action-card i {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .action-card:nth-child(1) i { color: var(--accent); }
+        .action-card:nth-child(2) i { color: var(--primary); }
+        .action-card:nth-child(3) i { color: #9B59B6; }
+        .action-card:nth-child(4) i { color: var(--secondary); }
+        .action-card:nth-child(5) i { color: #F39C12; }
+        .action-card:nth-child(6) i { color: #3498DB; }
+
+        .action-card span {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        /* Section Headers */
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .section-header h2 {
+            font-size: 22px;
+            color: var(--primary);
+        }
+
+        .section-header a {
+            color: var(--secondary);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        /* Emergency Contacts */
+        .contacts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+        }
+
+        .contact-card {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .contact-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .contact-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+        }
+
+        .contact-icon.blue { background: var(--primary); }
+        .contact-icon.red { background: var(--accent); }
+        .contact-icon.green { background: var(--secondary); }
+        .contact-icon.orange { background: #F39C12; }
+        .contact-icon.purple { background: #9B59B6; }
+        .contact-icon.teal { background: #1ABC9C; }
+
+        .contact-info h3 {
+            font-size: 16px;
+            margin-bottom: 4px;
+        }
+
+        .contact-info p {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .call-btn {
+            margin-left: auto;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: var(--secondary);
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .call-btn:hover {
+            transform: scale(1.1);
+            background: #27AE60;
+        }
+
+        /* Report Form */
+        .report-form {
+            background: var(--card-bg);
+            padding: 24px;
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #E0E0E0;
+            border-radius: 10px;
+            font-size: 16px;
+            font-family: 'Open Sans', sans-serif;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .form-group .toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .toggle {
+            width: 50px;
+            height: 26px;
+            background: #E0E0E0;
+            border-radius: 13px;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .toggle.active {
+            background: var(--secondary);
+        }
+
+        .toggle::after {
+            content: '';
+            position: absolute;
+            width: 22px;
+            height: 22px;
+            background: white;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: left 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .toggle.active::after {
+            left: 26px;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, var(--accent), #C0392B);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(231, 76, 60, 0.4);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Safety Tips */
+        .tips-search {
+            position: relative;
+            margin-bottom: 24px;
+        }
+
+        .tips-search input {
+            width: 100%;
+            padding: 14px 16px 14px 48px;
+            border: 2px solid #E0E0E0;
+            border-radius: 12px;
+            font-size: 16px;
+        }
+
+        .tips-search i {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+        }
+
+        .tips-grid {
+            display: grid;
+            gap: 16px;
+        }
+
+        .tip-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .tip-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .tip-header {
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            cursor: pointer;
+        }
+
+        .tip-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .tip-icon.personal { background: #3498DB; }
+        .tip-icon.road { background: #F39C12; }
+        .tip-icon.cyber { background: #9B59B6; }
+        .tip-icon.fire { background: var(--accent); }
+        .tip-icon.medical { background: var(--secondary); }
+
+        .tip-title {
+            flex: 1;
+        }
+
+        .tip-title h3 {
+            font-size: 16px;
+            margin-bottom: 4px;
+        }
+
+        .tip-title span {
+            font-size: 12px;
+            color: var(--text-secondary);
+            background: #F0F0F0;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        .tip-expand {
+            color: var(--text-secondary);
+            transition: transform 0.3s ease;
+        }
+
+        .tip-card.expanded .tip-expand {
+            transform: rotate(180deg);
+        }
+
+        .tip-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .tip-card.expanded .tip-content {
+            max-height: 500px;
+        }
+
+        .tip-content-inner {
+            padding: 0 20px 20px;
+            border-top: 1px solid #F0F0F0;
+            padding-top: 16px;
+        }
+
+        .tip-content-inner ul {
+            padding-left: 20px;
+            color: var(--text-secondary);
+        }
+
+        .tip-content-inner li {
+            margin-bottom: 8px;
+        }
+
+        .steps-container {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .step-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px;
+            border-radius: 10px;
+            transition: transform 0.2s ease;
+        }
+
+        .step-item:hover {
+            transform: translateX(4px);
+        }
+
+        .step-number {
+            width: 36px;
+            height: 36px;
+            min-width: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            font-size: 16px;
+        }
+
+        .step-content h5 {
+            margin: 0 0 4px 0;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .step-content p {
+            margin: 0;
+            font-size: 12px;
+            color: #7F8C8D;
+        }
+
+        .bookmark-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 20px;
+            cursor: pointer;
+            margin-left: 12px;
+            transition: color 0.3s ease;
+        }
+
+        .bookmark-btn.active {
+            color: #F39C12;
+        }
+
+        /* Map */
+        .map-container {
+            height: 60vh;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            margin-bottom: 24px;
+        }
+
+        #map {
+            height: 100%;
+            width: 100%;
+        }
+
+        .map-filters {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .filter-btn {
+            padding: 10px 16px;
+            border: 2px solid #E0E0E0;
+            background: var(--card-bg);
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filter-btn.active {
+            border-color: var(--primary);
+            background: rgba(30, 58, 95, 0.1);
+            color: var(--primary);
+        }
+
+        .filter-btn i {
+            font-size: 16px;
+        }
+
+        .location-info {
+            background: var(--card-bg);
+            padding: 16px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+        }
+
+        .location-info h4 {
+            margin-bottom: 8px;
+            color: var(--primary);
+        }
+
+        .location-info p {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            padding: 24px;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 32px;
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+        }
+
+        .modal-overlay.active .modal {
+            transform: scale(1);
+        }
+
+        .modal-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 36px;
+            color: white;
+            animation: pulse 1s infinite;
+        }
+
+        .modal h2 {
+            margin-bottom: 12px;
+            color: var(--primary);
+        }
+
+        .modal p {
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+        }
+
+        .modal-btns {
+            display: flex;
+            gap: 12px;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 14px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .modal-btn.cancel {
+            background: #E0E0E0;
+            border: none;
+            color: var(--text-primary);
+        }
+
+        .modal-btn.confirm {
+            background: var(--accent);
+            border: none;
+            color: white;
+        }
+
+        .modal-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Toast */
+        .toast-container {
+            position: fixed;
+            top: 80px;
+            right: 24px;
+            z-index: 3000;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .toast {
+            background: var(--card-bg);
+            padding: 16px 20px;
+            border-radius: 12px;
+            box-shadow: var(--shadow-hover);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideIn 0.3s ease;
+            min-width: 280px;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .toast.success {
+            border-left: 4px solid var(--secondary);
+        }
+
+        .toast.error {
+            border-left: 4px solid var(--accent);
+        }
+
+        .toast.info {
+            border-left: 4px solid var(--primary);
+        }
+
+        .toast i {
+            font-size: 20px;
+        }
+
+        .toast.success i { color: var(--secondary); }
+        .toast.error i { color: var(--accent); }
+        .toast.info i { color: var(--primary); }
+
+        /* Loading */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Success Page */
+        .success-page {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .success-icon {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: var(--secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+            font-size: 48px;
+            color: white;
+        }
+
+        .success-page h2 {
+            color: var(--primary);
+            margin-bottom: 12px;
+        }
+
+        .ref-id {
+            background: #F0F0F0;
+            padding: 16px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-family: monospace;
+            font-size: 18px;
+            letter-spacing: 2px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .quick-actions {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .header h1 {
+                font-size: 20px;
+            }
+
+            .main-content {
+                padding: 16px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .quick-actions {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 12px;
+            }
+
+            .action-card {
+                padding: 16px 12px;
+            }
+
+            .action-card i {
+                font-size: 28px;
+            }
+
+            .action-card span {
+                font-size: 12px;
+            }
+        }
+
+        /* Hide on desktop */
+        @media (min-width: 1024px) {
+            .bottom-nav {
+                display: none;
+            }
+
+            .main-content {
+                padding-bottom: 24px;
+                margin-right: 300px;
+            }
+
+            .sidebar {
+                right: 0;
+                left: auto;
+                width: 300px;
+            }
+
+            .header {
+                margin-right: 300px;
+            }
+
+            .menu-btn {
+                display: none;
+            }
+
+            .quick-actions {
+                grid-template-columns: repeat(6, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Main Script -->
+    <script>
+    window.onerror = function(msg, url, line) {
+        alert('Error: ' + msg + '\nLine: ' + line);
+        return true;
+    };
+    try {
+        // Language Data
+        var languages = [
+            { code: 'en', name: 'English', native: 'English' },
+            { code: 'hi', name: 'Hindi', native: 'हिन्दी' },
+            { code: 'te', name: 'Telugu', native: 'తెలుగు' },
+            { code: 'ta', name: 'Tamil', native: 'தமிழ்' },
+            { code: 'kn', name: 'Kannada', native: 'ಕನ್ನಡ' },
+            { code: 'ml', name: 'Malayalam', native: 'മലയാളം' }
+        ];
+        var selectedLanguage = localStorage.getItem('safeguard_language') || 'en';
+        var isSpeaking = false;
+        var appText = {
+            en: { appName: 'SafeGuard', home: 'Home', contacts: 'Emergency Contacts', report: 'Report Incident', tips: 'Safety Tips', map: 'Safe Zones', sosButton: 'SOS', callEmergency: 'Call Emergency', reportIncident: 'Report Incident', findSafeZone: 'Find Safe Zone', addContact: 'Add Contact', shareLocation: 'Share Location', familyAlert: 'Family Alert' },
+            hi: { appName: 'सेफगार्ड', home: 'होम', contacts: 'आपातकालीन संपर्क', report: 'घटना की रिपोर्ट', tips: 'सुरक्षा टिप्स', map: 'सुरक्षित क्षेत्र', sosButton: 'SOS', callEmergency: 'आपातकालीन कॉल', reportIncident: 'घटना रिपोर्ट करें', findSafeZone: 'सुरक्षित क्षेत्र खोजें', addContact: 'संपर्क जोड़ें', shareLocation: 'स्थान साझा करें', familyAlert: 'परिवार अलर्ट' },
+            te: { appName: 'Safeguard', home: 'Home', contacts: 'Emergency', report: 'Report', tips: 'Tips', map: 'Map', sosButton: 'SOS', callEmergency: 'Call', reportIncident: 'Report', findSafeZone: 'Find', addContact: 'Add', shareLocation: 'Share', familyAlert: 'Family' },
+            ta: { appName: 'Safeguard', home: 'Home', contacts: 'Contacts', report: 'Report', tips: 'Tips', map: 'Map', sosButton: 'SOS', callEmergency: 'Call', reportIncident: 'Report', findSafeZone: 'Find', addContact: 'Add', shareLocation: 'Share', familyAlert: 'Family' },
+            kn: { appName: 'ಸೇಫ್‌ಗಾರ್ಡ್', home: 'ಮನೆ', contacts: 'ತುರ್ತು ಸಂಪರ್ಕಗಳು', report: 'ವರದಿ', tips: 'ಸುರಕ್ಷತಾ ಸಲಹೆಗಳು', map: 'ಸುರಕ್ಷಿತ ಪ್ರದೇಶಗಳು', sosButton: 'SOS', callEmergency: 'ಕರೆ', reportIncident: 'ವರದಿ', findSafeZone: 'ಹುಡುಕಿ', addContact: 'ಸೇರಿಸಿ', shareLocation: 'ಹಂಚಿಕೊಳ್ಳಿ', familyAlert: 'ಕುಟುಂಬ' },
+            ml: { appName: 'സേഫ്ഗാര്‍ഡ്', home: 'വീട്', contacts: 'അടിയന്തര ബന്ധങ്ങള്‍', report: 'റിപ്പോര്‍ട്ട്', tips: 'സുരക്ഷാ നുറിച്ചുകള്‍', map: 'സുരക്ഷിത മേഖലകള്‍', sosButton: 'SOS', callEmergency: 'വിളിക്കുക', reportIncident: 'റിപ്പോര്‍ട്ട്', findSafeZone: 'കണ്ടെത്തുക', addContact: 'ചേര്‍ക്കുക', shareLocation: 'പങ്കിടുക', familyAlert: 'കുടുംബം' }
+        };
+        function getText(key) { return appText[selectedLanguage]?.[key] || appText.en[key] || key; }
+        function at(key) { return getText(key); }
+        function updateAppLanguage() {
+            document.querySelectorAll('.nav-item span')[0] && (document.querySelectorAll('.nav-item span')[0].textContent = getText('home'));
+            document.querySelectorAll('.nav-item span')[1] && (document.querySelectorAll('.nav-item span')[1].textContent = getText('contacts'));
+            document.querySelectorAll('.nav-item span')[2] && (document.querySelectorAll('.nav-item span')[2].textContent = getText('report'));
+            document.querySelectorAll('.nav-item span')[3] && (document.querySelectorAll('.nav-item span')[3].textContent = getText('tips'));
+            document.querySelectorAll('.nav-item span')[4] && (document.querySelectorAll('.nav-item span')[4].textContent = getText('map'));
+            var sos = document.querySelector('.sos-btn');
+            if(sos) sos.innerHTML = '<i class="fas fa-bell"></i><br>' + getText('sosButton');
+        }
+        function fetchWeather() {
+            var wc = document.getElementById('weatherContent');
+            if(!wc) return;
+            wc.innerHTML = '<div style="text-align:center;padding:20px;"><i class="fas fa-spinner fa-spin" style="font-size:24px;color:var(--primary);"></i><p style="margin-top:8px;">Loading...</p></div>';
+            var lat = 28.6139, lng = 77.2090;
+            fetch('https://api.open-meteo.com/v1/forecast?latitude='+lat+'&longitude='+lng+'&current_weather=true').then(r=>r.json()).then(d=>{
+                if(d.current_weather) {
+                    var t = Math.round(d.current_weather.temperature);
+                    wc.innerHTML = '<div style="text-align:center;"><div style="font-size:48px;color:var(--primary);"><i class="fas fa-sun"></i></div><div style="font-size:32px;font-weight:bold;">'+t+'°C</div><div style="color:#666;">Clear</div></div>';
+                }
+            }).catch(()=>{ wc.innerHTML = '<div style="text-align:center;padding:20px;color:#E74C3C;">Unable to load</div>'; });
+        }
+        var defaultContacts = [{id:1,name:'Police',number:'100',category:'police'},{id:2,name:'Fire',number:'101',category:'fire'},{id:3,name:'Ambulance',number:'102',category:'medical'},{id:4,name:'Women Helpline',number:'1091',category:'police'}];
+        var contacts = [...defaultContacts];
+        var familyContacts = JSON.parse(localStorage.getItem('safeguard_family_contacts') || '[]');
+        var map, userMarker, zoneMarkers = [];
+        var currentFilter = 'all';
+        var userLat = 28.6139, userLng = 77.2090;
+        var nearbyPlaces = { police: [], hospital: [], pharmacy: [], fire: [] };
+        var safetyTips = [
+            {id:1,category:'general',title:'Emergency Numbers',content:'Police: 100, Fire: 101, Ambulance: 102, Women Helpline: 1091'},
+            {id:2,category:'general',title:'Stay Alert',content:'Be aware of your surroundings at all times'},
+            {id:3,category:'disaster',title:'Earthquake',content:'Drop, Cover, and Hold On. Stay away from windows.'},
+            {id:4,category:'disaster',title:'Flood',content:'Move to higher ground. Do not walk in flood water.'}
+        ];
+        var bookmarks = JSON.parse(localStorage.getItem('safeguard_bookmarks') || '[]');
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            var savedLang = localStorage.getItem('safeguard_language');
+            if(savedLang) { selectedLanguage = savedLang; updateAppLanguage(); }
+            renderContacts();
+            renderFamilyContacts();
+            renderTips();
+            initMap();
+            fetchWeather();
+        });
+        
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(function(p){ p.classList.remove('active'); });
+            document.getElementById(pageId).classList.add('active');
+            document.querySelectorAll('.nav-item').forEach(function(n){ n.classList.remove('active'); });
+            var navMap = { 'home': 0, 'contacts': 1, 'report': 2, 'tips': 3, 'map': 4 };
+            if(navMap[pageId] !== undefined) document.querySelectorAll('.nav-item')[navMap[pageId]].classList.add('active');
+            var sidebarLinks = document.querySelectorAll('.sidebar-menu a');
+            var sidebarMap = { 'home': 0, 'contacts': 1, 'report': 2, 'tips': 3, 'map': 4 };
+            if(sidebarMap[pageId] !== undefined && sidebarLinks[sidebarMap[pageId]]) sidebarLinks[sidebarMap[pageId]].classList.add('active');
+            toggleSidebar(false);
+            if(pageId === 'map' && map) setTimeout(function(){ map.invalidateSize(); }, 100);
+        }
+        
+        function toggleSidebar(force) {
+            var sidebar = document.querySelector('.sidebar');
+            var overlay = document.querySelector('.sidebar-overlay');
+            if(force === false) { sidebar.classList.remove('active'); overlay.classList.remove('active'); }
+            else { sidebar.classList.toggle('active'); overlay.classList.toggle('active'); }
+        }
+        
+        function triggerSOS() { document.getElementById('sosModal').classList.add('active'); }
+        function closeSOSModal() { document.getElementById('sosModal').classList.remove('active'); }
+        
+        function confirmSOS() {
+            if(navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(pos) {
+                    var lat = pos.coords.latitude;
+                    var lng = pos.coords.longitude;
+                    var msg = 'EMERGENCY SOS!\nLocation: https://maps.google.com/?q='+lat+','+lng;
+                    alert(msg);
+                    closeSOSModal();
+                    showToast('SOS Alert Sent!', 'success');
+                }, function(){ alert('Could not get location'); });
+            } else { alert('Geolocation not supported'); }
+        }
+        
+        function renderContacts() {
+            var list = document.getElementById('contactsList');
+            if(!list) return;
+            list.innerHTML = contacts.map(function(c){ return '<div class="contact-card"><div class="contact-info"><h3>'+c.name+'</h3><p>'+c.number+'</p></div><button class="call-btn" onclick="callContact(\''+c.number+'\')"><i class="fas fa-phone"></i> Call</button></div>'; }).join('');
+        }
+        
+        function callContact(num) { window.location.href = 'tel:' + num; }
+        
+        function renderFamilyContacts() {
+            var list = document.getElementById('familyContactsList');
+            if(!list) return;
+            if(familyContacts.length === 0) { list.innerHTML = '<p style="text-align:center;color:#7F8C8D;padding:20px;">No family contacts yet</p>'; return; }
+            list.innerHTML = familyContacts.map(function(c){ return '<div class="contact-card"><div class="contact-info"><h3>'+c.name+'</h3><p>'+c.number+' ('+c.relation+')</p></div><button class="call-btn" onclick="callContact(\''+c.number+'\')"><i class="fas fa-phone"></i></button></div>'; }).join('');
+        }
+        
+        function showAddFamilyModal() {
+            var name = prompt('Enter name:');
+            if(!name) return;
+            var number = prompt('Enter phone number:');
+            if(!number) return;
+            var relation = prompt('Relation:');
+            var newContact = { id: Date.now(), name: name, number: number, relation: relation || 'Family' };
+            familyContacts.push(newContact);
+            localStorage.setItem('safeguard_family_contacts', JSON.stringify(familyContacts));
+            renderFamilyContacts();
+            showToast('Family contact added!', 'success');
+        }
+        
+        function deleteFamilyContact(id) {
+            if(confirm('Delete this contact?')) {
+                familyContacts = familyContacts.filter(function(c){ return c.id !== id; });
+                localStorage.setItem('safeguard_family_contacts', JSON.stringify(familyContacts));
+                renderFamilyContacts();
+            }
+        }
+        
+        function sendFamilyAlert() {
+            if(navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(pos) {
+                    var lat = pos.coords.latitude;
+                    var lng = pos.coords.longitude;
+                    var msg = 'I am safe!\nLocation: https://maps.google.com/?q='+lat+','+lng;
+                    familyContacts.forEach(function(c){ alert('Sending to ' + c.name + ': ' + msg); });
+                    showToast('Family alert sent!', 'success');
+                }, function(){ alert('Could not get location'); });
+            }
+        }
+        
+        function shareLocation() {
+            if(navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(pos) {
+                    var lat = pos.coords.latitude;
+                    var lng = pos.coords.longitude;
+                    var url = 'https://maps.google.com/?q='+lat+','+lng;
+                    navigator.clipboard.writeText(url);
+                    showToast('Location copied!', 'success');
+                }, function(){ alert('Could not get location'); });
+            }
+        }
+        
+        function renderTips(filter) {
+            var list = document.getElementById('tipsList');
+            if(!list) return;
+            var tips = filter ? safetyTips.filter(function(t){ return t.category === filter; }) : safetyTips;
+            list.innerHTML = tips.map(function(t){ return '<div class="tip-card"><h3>'+t.title+'</h3><p>'+t.content+'</p></div>'; }).join('');
+        }
+        
+        function initMap() {
+            map = L.map('map').setView([28.6139, 77.2090], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
+            if(navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(pos) {
+                    userLat = pos.coords.latitude;
+                    userLng = pos.coords.longitude;
+                    userMarker = L.marker([userLat, userLng]).addTo(map).bindPopup('Your Location');
+                    map.setView([userLat, userLng], 14);
+                    fetchNearbyPlaces(userLat, userLng);
+                }, function(){ fetchNearbyPlaces(28.6139, 77.2090); });
+            }
+        }
+        
+        function fetchNearbyPlaces(lat, lng) {
+            var radius = 10000;
+            var query = '[out:json][timeout:25];(node["amenity"="police"](around:'+radius+','+lat+','+lng+');node["amenity"="hospital"](around:'+radius+','+lat+','+lng+');node["shop"="pharmacy"](around:'+radius+','+lat+','+lng+');node["amenity"="fire_station"](around:'+radius+','+lat+','+lng+'););out body;';
+            fetch('https://overpass-api.de/api/interpreter?data=' + encodeURIComponent(query)).then(function(r){ return r.json(); }).then(function(data){
+                nearbyPlaces = { police: [], hospital: [], pharmacy: [], fire: [] };
+                data.elements.forEach(function(el){
+                    var place = { lat: el.lat, lng: el.lon, name: el.tags.name || 'Unknown', type: el.tags.amenity || el.tags.shop };
+                    if(el.tags.amenity === 'police') nearbyPlaces.police.push(place);
+                    else if(el.tags.amenity === 'hospital') nearbyPlaces.hospital.push(place);
+                    else if(el.tags.shop === 'pharmacy') nearbyPlaces.pharmacy.push(place);
+                    else if(el.tags.amenity === 'fire_station') nearbyPlaces.fire.push(place);
+                });
+                showNearbyPlaces();
+            }).catch(function(){ console.log('Failed to fetch places'); });
+        }
+        
+        function showNearbyPlaces() {
+            zoneMarkers.forEach(function(m){ map.removeLayer(m); });
+            zoneMarkers = [];
+            var places = currentFilter === 'all' ? [...nearbyPlaces.police, ...nearbyPlaces.hospital, ...nearbyPlaces.pharmacy, ...nearbyPlaces.fire] : nearbyPlaces[currentFilter] || [];
+            var iconClass = { police: 'fa-shield-alt', hospital: 'fa-hospital', pharmacy: 'fa-pills', fire: 'fa-fire' };
+            var color = { police: '#1E3A5F', hospital: '#E74C3C', pharmacy: '#2ECC71', fire: '#F39C12' };
+            places.forEach(function(p){
+                var icon = L.divIcon({ className: 'custom-marker', html: '<div style="background:'+color[p.type]+';width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;"><i class="fas '+iconClass[p.type]+'"></i></div>', iconSize: [30,30] });
+                var marker = L.marker([p.lat, p.lng], {icon: icon}).addTo(map).bindPopup('<b>'+p.name+'</b><br><a href="https://www.google.com/maps/dir/?api=1&destination='+p.lat+','+p.lng+'" target="_blank" style="color:#1E3A5F;">Directions</a>');
+                zoneMarkers.push(marker);
+            });
+        }
+        
+        function filterMap(type) {
+            currentFilter = type;
+            document.querySelectorAll('.filter-btn').forEach(function(b){ b.classList.remove('active'); });
+            event.target.classList.add('active');
+            showNearbyPlaces();
+        }
+        
+        function refreshLocations() {
+            if(navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(pos){
+                    userLat = pos.coords.latitude;
+                    userLng = pos.coords.longitude;
+                    map.setView([userLat, userLng], 14);
+                    fetchNearbyPlaces(userLat, userLng);
+                    showToast('Locations refreshed!', 'success');
+                });
+            }
+        }
+        
+        function toggleChatbot() { document.getElementById('chatbot').classList.toggle('active'); }
+        function sendMessage() {
+            var input = document.getElementById('chatInput');
+            var msg = input.value.trim();
+            if(!msg) return;
+            var chatMessages = document.getElementById('chatMessages');
+            chatMessages.innerHTML += '<div class="chatbot-msg user"><span>'+msg+'</span></div>';
+            input.value = '';
+            setTimeout(function(){
+                chatMessages.innerHTML += '<div class="chatbot-msg bot"><span>Thank you! For emergencies, call 100. Stay safe!</span></div>';
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }, 1000);
+        }
+        function handleChatKey(e) { if(e.key === 'Enter') sendMessage(); }
+        function showHelp(topic) {
+            var help = { sos: 'Tap the SOS button to send emergency alert with your location.', report: 'Go to Report section to report any incident.', contacts: 'Emergency: Police 100, Fire 101, Ambulance 102.', tips: 'Check Safety Tips for disaster preparedness.', map: 'Find nearby police, hospitals, and medical stores.' };
+            alert(help[topic] || 'Help');
+        }
+        function showToast(msg, type) {
+            var container = document.getElementById('toastContainer');
+            var toast = document.createElement('div');
+            toast.className = 'toast ' + type;
+            toast.innerHTML = '<i class="fas ' + (type==='success'?'fa-check-circle':type==='error'?'fa-times-circle':'fa-info-circle') + '"></i><span>'+msg+'</span>';
+            container.appendChild(toast);
+            setTimeout(function(){ toast.style.opacity = '0'; setTimeout(function(){ toast.remove(); }, 300); }, 3000);
+        }
+    } catch(e) {
+        alert('Error: ' + e.message);
+    }
+    </script>
+
+    <!-- Chatbot Toggle -->
+    <div class="chatbot-toggle" onclick="toggleChatbot()">
+        <i class="fas fa-robot"></i>
+    </div>
+    <div class="chatbot-container" id="chatbot">
+        <div class="chatbot-header">
+            <span><i class="fas fa-robot"></i> SafeGuard Assistant</span>
+            <button onclick="toggleChatbot()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="chatbot-messages" id="chatMessages">
+            <div class="chatbot-msg bot">
+                <span id="welcomeMsg">Hello! How can I help you today?</span>
+            </div>
+        </div>
+        <div class="chatbot-input">
+            <button onclick="startVoiceInput()" title="Voice Input"><i class="fas fa-microphone"></i></button>
+            <input type="text" id="chatInput" placeholder="Type message..." onkeypress="handleChatKey(event)">
+            <button onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
+        </div>
+        <div class="chatbot-options" id="chatOptions">
+            <button onclick="showHelp('sos')">🚨 SOS Help</button>
+            <button onclick="showHelp('report')">📢 Report</button>
+            <button onclick="showHelp('contacts')">📞 Contacts</button>
+            <button onclick="showHelp('tips')">💡 Tips</button>
+            <button onclick="showHelp('disaster')">🌪️ Disaster</button>
+            <button onclick="showHelp('map')">🗺️ Map</button>
+        </div>
+    </div>
+
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">
+                <i class="fas fa-shield-halved"></i>
+                <h1>SafeGuard</h1>
+            </div>
+            <button class="menu-btn" onclick="toggleSidebar()">
+                <i class="fas fa-bars"></i>
+            </button>
+        </header>
+
+        <!-- Sidebar -->
+        <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+        <aside class="sidebar">
+            <ul class="sidebar-menu">
+                <li><a href="#" class="active" onclick="showPage('home')"><i class="fas fa-home"></i> Home</a></li>
+                <li><a href="#" onclick="showPage('contacts')"><i class="fas fa-phone-alt"></i> Emergency Contacts</a></li>
+                <li><a href="#" onclick="showPage('report')"><i class="fas fa-flag"></i> Report Incident</a></li>
+                <li><a href="#" onclick="showPage('tips')"><i class="fas fa-lightbulb"></i> Safety Tips</a></li>
+                <li><a href="#" onclick="showPage('map')"><i class="fas fa-map-marked-alt"></i> Safe Zones</a></li>
+            </ul>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Home Page -->
+            <div id="home" class="page active">
+                <div class="sos-section">
+                    <button class="sos-btn" onclick="triggerSOS()">
+                        <i class="fas fa-bell"></i><br>SOS
+                    </button>
+                    <p class="sos-hint">Tap for emergency alert</p>
+                </div>
+
+                <div class="quick-actions">
+                    <div class="action-card" onclick="triggerSOS()">
+                        <i class="fas fa-bell"></i>
+                        <span>SOS Alert</span>
+                    </div>
+                    <div class="action-card" onclick="showPage('contacts')">
+                        <i class="fas fa-phone-alt"></i>
+                        <span>Call Emergency</span>
+                    </div>
+                    <div class="action-card" onclick="showPage('report')">
+                        <i class="fas fa-flag"></i>
+                        <span>Report Incident</span>
+                    </div>
+                    <div class="action-card" onclick="showPage('map')">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>Find Safe Zone</span>
+                    </div>
+                    <div class="action-card" onclick="showPage('contacts')">
+                        <i class="fas fa-user-plus"></i>
+                        <span>Add Contact</span>
+                    </div>
+                    <div class="action-card" onclick="shareLocation()">
+                        <i class="fas fa-share-alt"></i>
+                        <span>Share Location</span>
+                    </div>
+                    <div class="action-card" onclick="sendFamilyAlert()">
+                        <i class="fas fa-users"></i>
+                        <span>Family Alert</span>
+                    </div>
+                </div>
+
+                <!-- Weather Widget -->
+                <div class="weather-widget" id="weatherWidget" style="margin-top: 24px;">
+                    <div class="section-header">
+                        <h2><i class="fas fa-cloud-sun"></i> <span id="weatherTitle">Weather</span></h2>
+                        <button onclick="fetchWeather()" style="background:none;border:none;color:var(--primary);cursor:pointer;">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
+                    <div class="weather-content" id="weatherContent">
+                        <div style="text-align:center;padding:20px;">
+                            <i class="fas fa-spinner fa-spin" style="font-size:24px;color:var(--primary);"></i>
+                            <p style="margin-top:8px;" id="weatherLoading">Loading weather...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 32px;">
+                    <div class="section-header">
+                        <h2>Recent Alerts</h2>
+                    </div>
+                    <div class="tip-card">
+                        <div class="tip-header" style="cursor: default;">
+                            <div class="tip-icon fire">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <div class="tip-title">
+                                <h3>Stay Alert</h3>
+                                <span>Security Update</span>
+                            </div>
+                        </div>
+                        <div class="tip-content" style="max-height: none;">
+                            <div class="tip-content-inner">
+                                <p>Be aware of your surroundings. Report any suspicious activity immediately to campus security.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Emergency Contacts Page -->
+            <div id="contacts" class="page">
+                <div class="section-header">
+                    <h2>Emergency Contacts</h2>
+                </div>
+                <div class="contacts-grid" id="contactsList">
+                    <!-- Contacts will be added dynamically -->
+                </div>
+
+                <!-- Family Contacts Section -->
+                <div class="section-header" style="margin-top: 32px;">
+                    <h2>Family Contacts</h2>
+                    <button class="submit-btn" onclick="showAddFamilyModal()" style="width:auto;padding:8px 16px;font-size:14px;">
+                        <i class="fas fa-plus"></i> Add
+                    </button>
+                </div>
+                <div class="contacts-grid" id="familyContactsList">
+                    <!-- Family contacts will be added dynamically -->
+                </div>
+            </div>
+
+            <!-- Report Incident Page -->
+            <div id="report" class="page">
+                <div class="section-header">
+                    <h2>Report Incident</h2>
+                </div>
+                <form class="report-form" id="reportForm" onsubmit="submitReport(event)">
+                    <div class="form-group">
+                        <label>Incident Category</label>
+                        <select id="incidentCategory" required>
+                            <option value="">Select category...</option>
+                            <option value="theft">Theft</option>
+                            <option value="harassment">Harassment</option>
+                            <option value="suspicious">Suspicious Activity</option>
+                            <option value="accident">Accident</option>
+                            <option value="fire">Fire</option>
+                            <option value="medical">Medical Emergency</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Location</label>
+                        <input type="text" id="incidentLocation" placeholder="Enter location or use current location" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Description (min 20 characters)</label>
+                        <textarea id="incidentDescription" placeholder="Describe the incident in detail..." minlength="20" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Upload Photo (Optional)</label>
+                        <div style="border:2px dashed #ccc;border-radius:10px;padding:20px;text-align:center;cursor:pointer;" onclick="document.getElementById('photoInput').click()">
+                            <i class="fas fa-camera" style="font-size:32px;color:#7F8C8D;"></i>
+                            <p style="color:#7F8C8D;margin-top:8px;">Tap to take photo or select from gallery</p>
+                            <input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none;" onchange="previewPhoto(event)">
+                        </div>
+                        <div id="photoPreview" style="display:none;margin-top:12px;position:relative;">
+                            <img id="previewImage" style="max-width:100%;max-height:200px;border-radius:8px;">
+                            <button type="button" onclick="removePhoto()" style="position:absolute;top:8px;right:8px;background:#E74C3C;color:white;border:none;width:28px;height:28px;border-radius:50%;cursor:pointer;">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Anonymous Report</label>
+                        <div class="toggle-container">
+                            <div class="toggle" id="anonymousToggle" onclick="toggleAnonymous()"></div>
+                            <span>Submit anonymously</span>
+                        </div>
+                    </div>
+                    <button type="submit" class="submit-btn" id="submitBtn">
+                        <span>Submit Report</span>
+                    </button>
+                </form>
+            </div>
+
+            <!-- Report Success -->
+            <div id="reportSuccess" class="page">
+                <div class="success-page">
+                    <div class="success-icon">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <h2>Report Submitted!</h2>
+                    <p>Thank you for your report. Our team will investigate immediately.</p>
+                    <div class="ref-id" id="refId">REF-000000</div>
+                    <button class="submit-btn" onclick="showPage('home')" style="max-width: 200px; margin: 0 auto;">
+                        Back to Home
+                    </button>
+                </div>
+            </div>
+
+            <!-- Safety Tips Page -->
+            <div id="tips" class="page">
+                <div class="section-header">
+                    <h2>Safety Tips</h2>
+                </div>
+                <div class="tips-search">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="tipsSearch" placeholder="Search tips..." oninput="filterTips()">
+                </div>
+                <div class="tips-grid" id="tipsList">
+                    <!-- Tips will be added dynamically -->
+                </div>
+            </div>
+
+            <!-- Safe Zones Map Page -->
+            <div id="map" class="page">
+                <div class="section-header">
+                    <h2>Safe Zones</h2>
+                </div>
+                <div class="map-filters">
+                    <button class="filter-btn active" data-filter="all" onclick="filterMap('all')">
+                        <i class="fas fa-layer-group"></i> All
+                    </button>
+                    <button class="filter-btn" data-filter="police" onclick="filterMap('police')">
+                        <i class="fas fa-shield-alt"></i> Police
+                    </button>
+                    <button class="filter-btn" data-filter="hospital" onclick="filterMap('hospital')">
+                        <i class="fas fa-hospital"></i> Hospital
+                    </button>
+                    <button class="filter-btn" data-filter="fire" onclick="filterMap('fire')">
+                        <i class="fas fa-fire"></i> Fire
+                    </button>
+                    <button class="filter-btn" data-filter="pharmacy" onclick="filterMap('pharmacy')">
+                        <i class="fas fa-pills"></i> Medical Store
+                    </button>
+                    <button class="filter-btn" data-filter="fuel" onclick="filterMap('fuel')">
+                        <i class="fas fa-gas-pump"></i> Petrol Bunk
+                    </button>
+                    <button class="filter-btn" onclick="refreshLocations()" title="Refresh nearby places">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
+                <div class="map-container">
+                    <div id="map"></div>
+                </div>
+                <div class="location-info" id="locationInfo">
+                    <h4><i class="fas fa-map-marker-alt"></i> Your Location</h4>
+                    <p id="userLocation">Click on markers to see details</p>
+                    <div style="margin-top:12px;display:flex;gap:12px;flex-wrap:wrap;font-size:12px;">
+                        <span><i class="fas fa-shield-alt" style="color:#3498DB;"></i> Police</span>
+                        <span><i class="fas fa-hospital" style="color:#E74C3C;"></i> Hospital</span>
+                        <span><i class="fas fa-pills" style="color:#2ECC71;"></i> Medical Store</span>
+                        <span><i class="fas fa-fire" style="color:#F39C12;"></i> Fire Station</span>
+                        <span><i class="fas fa-gas-pump" style="color:#8E44AD;"></i> Petrol Bunk</span>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <button class="nav-item active" onclick="showPage('home')">
+                <i class="fas fa-home"></i>
+                <span>Home</span>
+            </button>
+            <button class="nav-item" onclick="showPage('contacts')">
+                <i class="fas fa-phone-alt"></i>
+                <span>Contacts</span>
+            </button>
+            <button class="nav-item" onclick="showPage('report')">
+                <i class="fas fa-flag"></i>
+                <span>Report</span>
+            </button>
+            <button class="nav-item" onclick="showPage('tips')">
+                <i class="fas fa-lightbulb"></i>
+                <span>Tips</span>
+            </button>
+            <button class="nav-item" onclick="showPage('map')">
+                <i class="fas fa-map-marked-alt"></i>
+                <span>Map</span>
+            </button>
+        </nav>
+    </div>
+
+    <!-- SOS Modal -->
+    <div class="modal-overlay" id="sosModal">
+        <div class="modal">
+            <div class="modal-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <h2>Send SOS Alert?</h2>
+            <p>This will share your current location with all your emergency contacts.</p>
+            <div class="modal-btns">
+                <button class="modal-btn cancel" onclick="closeSOSModal()">Cancel</button>
+                <button class="modal-btn confirm" onclick="confirmSOS()">Send Alert</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</body>
+</html>
+        let isSpeaking = false;
+
+        // UI Translations - Complete app translation
+        const appText = {
+            en: {
+                appName: 'SafeGuard',
+                home: 'Home',
+                contacts: 'Emergency Contacts',
+                report: 'Report Incident',
+                tips: 'Safety Tips',
+                map: 'Safe Zones',
+                sosButton: 'SOS',
+                sosHint: 'Tap for emergency alert',
+                callEmergency: 'Call Emergency',
+                reportIncident: 'Report Incident',
+                findSafeZone: 'Find Safe Zone',
+                addContact: 'Add Contact',
+                shareLocation: 'Share Location',
+                familyAlert: 'Family Alert',
+                familyContacts: 'Family Contacts',
+                add: 'Add',
+                submitReport: 'Submit Report',
+                incidentCategory: 'Incident Category',
+                location: 'Location',
+                description: 'Description',
+                uploadPhoto: 'Upload Photo',
+                anonymous: 'Anonymous Report',
+                searchTips: 'Search tips...',
+                police: 'Police',
+                hospital: 'Hospital',
+                medicalStore: 'Medical Store',
+                fireStation: 'Fire Station',
+                petrolBunk: 'Petrol Bunk',
+                weather: 'Weather',
+                recentAlerts: 'Recent Alerts'
+            },
+            hi: {
+                appName: 'सेफगार्ड',
+                home: 'होम',
+                contacts: 'आपातकालीन संपर्क',
+                report: 'घटना की रिपोर्ट',
+                tips: 'सुरक्षा टिप्स',
+                map: 'सुरक्षित क्षेत्र',
+                sosButton: 'SOS',
+                sosHint: 'आपातकालीन अलर्ट के लिए टैप करें',
+                callEmergency: 'आपातकालीन कॉल',
+                reportIncident: 'घटना रिपोर्ट करें',
+                findSafeZone: 'सुरक्षित क्षेत्र खोजें',
+                addContact: 'संपर्क जोड़ें',
+                shareLocation: 'स्थान साझा करें',
+                familyAlert: 'परिवार अलर्ट',
+                familyContacts: 'परिवार के संपर्क',
+                add: 'जोड़ें',
+                submitReport: 'रिपोर्ट जमा करें',
+                incidentCategory: 'घटना की श्रेणी',
+                location: 'स्थान',
+                description: 'विवरण',
+                uploadPhoto: 'फोटो अपलोड करें',
+                anonymous: 'गुमनाम रिपोर्ट',
+                searchTips: 'टिप्स खोजें...',
+                police: 'पुलिस',
+                hospital: 'अस्पताल',
+                medicalStore: 'मेडिकल स्टोर',
+                fireStation: 'फायर स्टेशन',
+                petrolBunk: 'पेट्रोल पंप',
+                weather: 'मौसम',
+                recentAlerts: 'हाल की चेतावनी'
+            },
+            te: {
+                appName: 'Safeguard',
+                home: 'Home',
+                contacts: 'Emergency Contacts',
+                report: 'Report',
+                tips: 'Tips',
+                map: 'Map',
+                sosButton: 'SOS',
+                sosHint: 'Tap for SOS',
+                callEmergency: 'Call',
+                reportIncident: 'Report',
+                findSafeZone: 'Find Place',
+                addContact: 'Add Contact',
+                shareLocation: 'Share',
+                familyAlert: 'Family',
+                familyContacts: 'Family',
+                add: 'Add',
+                submitReport: 'Submit',
+                incidentCategory: 'Category',
+                location: 'Location',
+                description: 'Description',
+                uploadPhoto: 'Photo',
+                anonymous: 'Anonymous',
+                searchTips: 'Search...',
+                police: 'Police',
+                hospital: 'Hospital',
+                medicalStore: 'Medical',
+                fireStation: 'Fire',
+                petrolBunk: 'Petrol',
+                weather: 'Weather',
+                recentAlerts: 'Alerts'
+            },
+            ta: {
+                appName: 'Safeguard',
+                home: 'Home',
+                contacts: 'Contacts',
+                report: 'Report',
+                tips: 'Tips',
+                map: 'Map',
+                sosButton: 'SOS',
+                sosHint: 'Tap for SOS',
+                callEmergency: 'Call',
+                reportIncident: 'Report',
+                findSafeZone: 'Find',
+                addContact: 'Add',
+                shareLocation: 'Share',
+                familyAlert: 'Family',
+                familyContacts: 'Family',
+                add: 'Add',
+                submitReport: 'Submit',
+                incidentCategory: 'Category',
+                location: 'Place',
+                description: 'Details',
+                uploadPhoto: 'Photo',
+                anonymous: 'Anonymous',
+                searchTips: 'Search...',
+                police: 'Police',
+                hospital: 'Hospital',
+                medicalStore: 'Medical',
+                fireStation: 'Fire',
+                petrolBunk: 'Petrol',
+                weather: 'Weather',
+                recentAlerts: 'Alerts'
+            },
+            bn: {
+                appName: 'সেফগার্ড',
+                home: 'হোম',
+                contacts: 'জরুরি যোগাযোগ',
+                report: 'রিপোর্ট',
+                tips: 'টিপস',
+                map: 'ম্যাপ',
+                sosButton: 'SOS',
+                sosHint: 'SOS এ ট্যাপ করুন',
+                callEmergency: 'কল',
+                reportIncident: 'রিপোর্ট',
+                findSafeZone: 'খুঁজুন',
+                addContact: 'যোগ করুন',
+                shareLocation: 'শেয়ার',
+                familyAlert: 'পরিবার',
+                familyContacts: 'পরিবার',
+                add: 'যোগ',
+                submitReport: 'জমা',
+                incidentCategory: 'ধরন',
+                location: 'জায়গা',
+                description: 'বিবরণ',
+                uploadPhoto: 'ছবি',
+                anonymous: 'বেনামি',
+                searchTips: 'খুঁজুন...',
+                police: 'পুলিশ',
+                hospital: 'হাসপাতাল',
+                medicalStore: 'ফার্মেসি',
+                fireStation: 'ফায়ার',
+                petrolBunk: 'পেট্রোল',
+                weather: 'আবহাওয়া',
+                recentAlerts: 'সতর্কতা'
+            },
+            mr: {
+                appName: 'सेफगार्ड',
+                home: 'होम',
+                contacts: 'संपर्क',
+                report: 'रिपोर्ट',
+                tips: 'टिप्स',
+                map: 'नकाशा',
+                sosButton: 'SOS',
+                sosHint: 'SOS साठी टॅप करा',
+                callEmergency: 'कॉल',
+                reportIncident: 'रिपोर्ट',
+                findSafeZone: 'शोधा',
+                addContact: 'जोडा',
+                shareLocation: 'शेअर',
+                familyAlert: 'कुटुंब',
+                familyContacts: 'कुटुंब',
+                add: 'जोडा',
+                submitReport: 'सबमिट',
+                incidentCategory: 'प्रकार',
+                location: 'ठिकाण',
+                description: 'वर्णन',
+                uploadPhoto: 'फोटो',
+                anonymous: 'अनामिक',
+                searchTips: 'शोधा...',
+                police: 'पोलिस',
+                hospital: 'रुग्णालय',
+                medicalStore: 'फार्मसी',
+                fireStation: 'फायर',
+                petrolBunk: 'पेट्रोल',
+                weather: 'हवामान',
+                recentAlerts: 'सतर्कता'
+            },
+            kn: {
+                appName: 'ಸೇಫ್‌ಗಾರ್ಡ್',
+                home: 'ಮನೆ',
+                contacts: 'ತುರ್ತು ಸಂಪರ್ಕಗಳು',
+                report: 'ವರದಿ',
+                tips: 'ಸುರಕ್ಷತಾ ಸಲಹೆಗಳು',
+                map: 'ಸುರಕ್ಷಿತ ಪ್ರದೇಶಗಳು',
+                sosButton: 'SOS',
+                sosHint: 'ತುರ್ತು ಎಚ್ಚರಿಕೆಗಾಗಿ ಟ್ಯಾಪ್ ಮಾಡಿ',
+                callEmergency: 'ತುರ್ತು ಕರೆ',
+                reportIncident: 'ಘಟನೆಯನ್ನು ವರದಿ ಮಾಡಿ',
+                findSafeZone: 'ಸುರಕ್ಷಿತ ಪ್ರದೇಶವನ್ನು ಹುಡುಕಿ',
+                addContact: 'ಸಂಪರ್ಕ ಸೇರಿಸಿ',
+                shareLocation: 'ಸ್ಥಳವನ್ನು ಹಂಚಿಕೊಳ್ಳಿ',
+                familyAlert: 'ಕುಟುಂಬ ಎಚ್ಚರಿಕೆ',
+                familyContacts: 'ಕುಟುಂಬ ಸಂಪರ್ಕಗಳು',
+                add: 'ಸೇರಿಸಿ',
+                submitReport: 'ವರದಿ ಸಲ್ಲಿಸಿ',
+                incidentCategory: 'ಘಟನೆಯ ವರ್ಗ',
+                location: 'ಸ್ಥಳ',
+                description: 'ವಿವರಣೆ',
+                uploadPhoto: 'ಫೋಟೋ ಅಪ್‌ಲೋಡ್ ಮಾಡಿ',
+                anonymous: 'ಅನಾಮಧೇಯ ವರದಿ',
+                searchTips: 'ಸಲಹೆಗಳನ್ನು ಹುಡುಕಿ...',
+                police: 'ಪೊಲೀಸ್',
+                hospital: 'ಆಸ್ಪತ್ರೆ',
+                medicalStore: 'ಔಷಧ ಅಂಗಡಿ',
+                fireStation: 'ಬೆಂಕಿ ಕೇಂದ್ರ',
+                petrolBunk: 'ಪೆಟ್ರೋಲ್ ಬಂಕ್',
+                weather: 'ಹವಾಮಾನ',
+                recentAlerts: 'ಇತ್ತೀಚಿನ ಎಚ್ಚರಿಕೆಗಳು',
+                theft: 'ಕಳ್ಳತನ',
+                harassment: 'ಕಿರುಕುಳ',
+                suspicious: 'ಸಂಶಯಾಸ್ಪದ',
+                accident: 'ಅಪಘಾತ',
+                fire: 'ಬೆಂಕಿ',
+                medical: 'ವೈದ್ಯಕೀಯ ತುರ್ತು',
+                other: 'ಇತರ',
+                selectCategory: 'ವರ್ಗ ಆಯ್ಕೆಮಾಡಿ...'
+            },
+            ml: {
+                appName: 'സേഫ്‌ഗാർഡ്',
+                home: 'ഹോം',
+                contacts: 'അടിയന്തര ബന്ധങ്ങൾ',
+                report: 'റിപ്പോർട്ട്',
+                tips: 'സുരക്ഷാ നിര്യാതങ്ങൾ',
+                map: 'സുരക്ഷിത സോണുകൾ',
+                sosButton: 'SOS',
+                sosHint: 'അടിയന്തര അലേർട്ടിനായി ടാപ്പ് ചെയ്യുക',
+                callEmergency: 'അടിയന്തര വിളി',
+                reportIncident: 'സംഭവം റിപ്പോർട്ട് ചെയ്യുക',
+                findSafeZone: 'സുരക്ഷിത സോൺ കണ്ടെത്തുക',
+                addContact: 'ബന്ധം ചേര്‍ക്കുക',
+                shareLocation: 'ലൊക്കേഷൻ പങ്കിടുക',
+                familyAlert: 'കുടുംബ അലേർട്ട്',
+                familyContacts: 'കുടുംബ ബന്ധങ്ങൾ',
+                add: 'ചേര്‍ക്കുക',
+                submitReport: 'റിപ്പോർട്ട് സമര്‍പ്പിക്കുക',
+                incidentCategory: 'സംഭവത്തിന്റെ തരം',
+                location: 'സ്ഥലം',
+                description: 'വിവരണം',
+                uploadPhoto: 'ഫോട്ടോ അപ്‌ലോഡ് ചെയ്യുക',
+                anonymous: 'അജ്ഞാത റിപ്പോർട്ട്',
+                searchTips: 'നിര്യാതങ്ങൾ തിരയുക...',
+                police: 'പോലീസ്',
+                hospital: 'ആശുപത്രി',
+                medicalStore: 'ഫാർമസി',
+                fireStation: 'അഗ്നിശമനം',
+                petrolBunk: 'പെട്രോള്‍ ബംക്ക്',
+                weather: 'കാലാവസ്ഥ',
+                recentAlerts: 'അടുത്ത അലേർട്ടുകൾ',
+                theft: 'മോഷ്ടിക്കല്‍',
+                harassment: 'പീഡനം',
+                suspicious: 'സംശയാസ്പദമായ',
+                accident: 'അപകടം',
+                fire: 'തീപിടിതം',
+                medical: 'വൈദ്യമര്‍ത്ഥമായ',
+                other: 'മറ്റത്തരം',
+                selectCategory: 'തരം തിരഞ്ഞെടുക്കുക...'
+            }
+        };
+
+        function getText(key) {
+            const texts = appText[selectedLanguage] || appText.en;
+            return texts[key] || appText.en[key] || key;
+        }
+
+        // at() function - alias for getText() for translations
+        function at(key) {
+            return getText(key);
+        }
+
+        // fetchWeather function - loads weather data
+        function fetchWeather() {
+            const weatherContent = document.getElementById('weatherContent');
+            if (!weatherContent) return;
+            
+            weatherContent.innerHTML = '<div style="text-align:center;padding:20px;"><i class="fas fa-spinner fa-spin" style="font-size:24px;color:var(--primary);"></i><p style="margin-top:8px;">Loading...</p></div>';
+            
+            // Use Open-Meteo API (free, no API key needed)
+            const lat = userLat || 28.6139;
+            const lng = userLng || 77.2090;
+            
+            fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current_weather=true`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.current_weather) {
+                        const temp = Math.round(data.current_weather.temperature);
+                        const wind = data.current_weather.windspeed;
+                        const code = data.current_weather.weathercode;
+                        
+                        let icon = 'fa-cloud';
+                        let desc = 'Cloudy';
+                        if (code === 0) { icon = 'fa-sun'; desc = 'Clear'; }
+                        else if (code < 3) { icon = 'fa-cloud-sun'; desc = 'Partly Cloudy'; }
+                        else if (code < 50) { icon = 'fa-fog'; desc = 'Foggy'; }
+                        else if (code < 80) { icon = 'fa-cloud-rain'; desc = 'Rainy'; }
+                        else if (code < 90) { icon = 'fa-snowflake'; desc = 'Snowy'; }
+                        else { icon = 'fa-bolt'; desc = 'Thunderstorm'; }
+                        
+                        weatherContent.innerHTML = `
+                            <div class="weather-main">
+                                <i class="fas ${icon} weather-icon"></i>
+                                <div class="weather-temp">${temp}°C</div>
+                                <div class="weather-desc">${desc}</div>
+                            </div>
+                            <div class="weather-details">
+                                <div class="weather-detail-item">
+                                    <i class="fas fa-wind"></i>
+                                    <span class="label">Wind</span>
+                                    <span class="value">${wind} km/h</span>
+                                </div>
+                            </div>
+                        `;
+                    }
+                })
+                .catch(() => {
+                    weatherContent.innerHTML = '<div style="text-align:center;padding:20px;color:#E74C3C;">Unable to load weather</div>';
+                });
+        }
+
+        function updateAppLanguage() {
+            // Update all UI elements
+            const elements = document.querySelectorAll('[data-translate]');
+            elements.forEach(el => {
+                const key = el.getAttribute('data-translate');
+                el.textContent = getText(key);
+            });
+            
+            // Update navigation
+            const navItems = document.querySelectorAll('.nav-item span');
+            if(navItems[0]) navItems[0].textContent = getText('home');
+            if(navItems[1]) navItems[1].textContent = getText('contacts');
+            if(navItems[2]) navItems[2].textContent = getText('report');
+            if(navItems[3]) navItems[3].textContent = getText('tips');
+            if(navItems[4]) navItems[4].textContent = getText('map');
+            
+            // Update sidebar
+            const sidebarLinks = document.querySelectorAll('.sidebar-menu a');
+            if(sidebarLinks[0]) sidebarLinks[0].innerHTML = '<i class="fas fa-home"></i> ' + getText('home');
+            if(sidebarLinks[1]) sidebarLinks[1].innerHTML = '<i class="fas fa-phone-alt"></i> ' + getText('contacts');
+            if(sidebarLinks[2]) sidebarLinks[2].innerHTML = '<i class="fas fa-flag"></i> ' + getText('report');
+            if(sidebarLinks[3]) sidebarLinks[3].innerHTML = '<i class="fas fa-lightbulb"></i> ' + getText('tips');
+            if(sidebarLinks[4]) sidebarLinks[4].innerHTML = '<i class="fas fa-map-marked-alt"></i> ' + getText('map');
+            
+            // Update action buttons
+            const actionBtns = document.querySelectorAll('.action-card span');
+            if(actionBtns[0]) actionBtns[0].textContent = getText('sosButton');
+            if(actionBtns[1]) actionBtns[1].textContent = getText('callEmergency');
+            if(actionBtns[2]) actionBtns[2].textContent = getText('reportIncident');
+            if(actionBtns[3]) actionBtns[3].textContent = getText('findSafeZone');
+            if(actionBtns[4]) actionBtns[4].textContent = getText('addContact');
+            if(actionBtns[5]) actionBtns[5].textContent = getText('shareLocation');
+            if(actionBtns[6]) actionBtns[6].textContent = getText('familyAlert');
+            
+            // Update SOS button
+            const sosBtn = document.querySelector('.sos-btn');
+            if(sosBtn) {
+                sosBtn.innerHTML = '<i class="fas fa-bell"></i><br>' + getText('sosButton');
+            }
+            const sosHint = document.querySelector('.sos-hint');
+            if(sosHint) sosHint.textContent = getText('sosHint');
+            
+            // Update section headers
+            const sectionHeaders = document.querySelectorAll('.section-header h2');
+            if(sectionHeaders[0]) sectionHeaders[0].textContent = getText('contacts');
+            if(sectionHeaders[1]) sectionHeaders[1].textContent = getText('familyContacts');
+            if(sectionHeaders[2]) sectionHeaders[2].textContent = getText('report');
+            if(sectionHeaders[3]) sectionHeaders[3].textContent = getText('tips');
+            if(sectionHeaders[4]) sectionHeaders[4].textContent = getText('map');
+            if(sectionHeaders[5]) sectionHeaders[5].textContent = getText('weather');
+            if(sectionHeaders[6]) sectionHeaders[6].textContent = getText('recentAlerts');
+            
+            // Update form labels
+            const formLabels = document.querySelectorAll('.form-group label');
+            if(formLabels[0]) formLabels[0].textContent = getText('incidentCategory');
+            if(formLabels[1]) formLabels[1].textContent = getText('location');
+            if(formLabels[2]) formLabels[2].textContent = getText('description');
+            if(formLabels[3]) formLabels[3].textContent = getText('uploadPhoto');
+            if(formLabels[4]) formLabels[4].textContent = getText('anonymous');
+            
+            // Update map filters
+            const filterBtns = document.querySelectorAll('.filter-btn');
+            if(filterBtns[0]) filterBtns[0].innerHTML = '<i class="fas fa-layer-group"></i> All';
+            if(filterBtns[1]) filterBtns[1].innerHTML = '<i class="fas fa-shield-alt"></i> ' + getText('police');
+            if(filterBtns[2]) filterBtns[2].innerHTML = '<i class="fas fa-hospital"></i> ' + getText('hospital');
+            if(filterBtns[3]) filterBtns[3].innerHTML = '<i class="fas fa-fire"></i> ' + getText('fireStation');
+            if(filterBtns[4]) filterBtns[4].innerHTML = '<i class="fas fa-pills"></i> ' + getText('medicalStore');
+            if(filterBtns[5]) filterBtns[5].innerHTML = '<i class="fas fa-gas-pump"></i> ' + getText('petrolBunk');
+        }
+
+        // Translations
+        const translations = {
+            en: {
+                welcome: "Hello! How can I help you today?",
+                sosHelp: "For SOS emergency, tap the SOS button on home screen. It will send your location to police and family.",
+                reportHelp: "To report an incident: Go to Report section, fill details, add photo if needed, and submit. It will notify police.",
+                contactsHelp: "Emergency contacts include: Police 100, Fire 101, Ambulance 102, Women Helpline 1091.",
+                tipsHelp: "Safety tips include: Personal Safety, Road Safety, Cyber Safety, Fire Safety, First Aid, and Natural Disasters (Earthquake, Flood, Cyclone, Lightning, Heat Wave).",
+                disasterHelp: "Natural Disaster tips: Earthquake - DROP, COVER, HOLD ON. Flood - Move to high ground. Cyclone - Stay indoors. Lightning - Avoid open areas. Heat Wave - Stay hydrated.",
+                mapHelp: "Map shows nearby Police, Hospitals, Medical Stores, Fire Stations, and Petrol Bunks. Click any marker for directions.",
+                selectOption: "Please select an option below or type your question.",
+                listening: "Listening...",
+                notUnderstood: "I didn't understand. Please try again or select an option.",
+                howToUse: "This app helps you in emergencies. Use SOS for immediate help, Report to file complaints, Contacts for emergency numbers.",
+                voiceError: "Voice not available. Please type your message."
+            },
+            hi: {
+                welcome: "नमस्ते! आज मैं आपकी कैसे मदद कर सकता हूं?",
+                sosHelp: "आपातकालीन SOS के लिए, होम स्क्रीन पर SOS बटन दबाएं। यह पुलिस और परिवार को आपका स्थान भेजेगा।",
+                reportHelp: "घटना की रिपोर्ट करने के लिए: रिपोर्ट सेक्शन में जाएं, विवरण भरें, फोटो जोड़ें और सबमिट करें।",
+                contactsHelp: "आपातकालीन संपर्क: पुलिस 100, फायर 101, एम्बुलेंस 102, महिला हेल्पलाइन 1091।",
+                tipsHelp: "सुरक्षा टिप्स: व्यक्तिगत सुरक्षा, सड़क सुरक्षा, साइबर सुरक्षा, आग सुरक्षा।",
+                mapHelp: "नक्शे पर पुलिस, अस्पताल, मेडिकल स्टोर, फायर स्टेशन दिखाई देंगे।",
+                selectOption: "कृपया नीचे विकल्प चुनें या प्रश्न लिखें।",
+                listening: "सुन रहा हूं...",
+                notUnderstood: "मुझे समझ नहीं आया। कृपया पुनः प्रयास करें।",
+                howToUse: "यह ऐप आपातकाल में मदद करता है। तुरंत मदद के लिए SOS का उपयोग करें।",
+                voiceError: "आवाज उपलब्ध नहीं है। कृपया टाइप करें।"
+            },
+            bn: {
+                welcome: "নমস্কার! আমি আজ আপাকে কীভাবে সাহায্য করতে পারি?",
+                sosHelp: "জরুরি SOS এর জন্য, হোম স্ক্রিনে SOS বাটন ট্যাপ করুন। এটি পুলিশ ও পরিবারে আপনার লোকেশন পাঠাবে।",
+                reportHelp: "ঘটনা রিপোর্ট করতে: রিপোর্ট সেকশনে যান, বিবরণ দিন, ফোটো যোগ করুন এবং সাবমিট করুন।",
+                contactsHelp: "জরুরি যোগাযোগ: পুলিশ 100, ফায়ার 101, অ্যাম্বুলেন্স 102।",
+                tipsHelp: "নিরাপত্তা টিপস: ব্যক্তিগত নিরাপত্তা, রাস্তার নিরাপত্তা, সাইবার নিরাপত্তা।",
+                mapHelp: "ম্যাপে পুলিশ, হাসপাতাল, মেডিকেল স্টোর দেখা যাবে।",
+                selectOption: "নিচের অপশন বেছে নিন বা প্রশ্ন লিখুন।",
+                listening: "শুনছি...",
+                notUnderstood: "বুঝতে পারিনি। আবার চেষ্টা করুন।",
+                howToUse: "এই অ্যাপ জরুরিতে সাহায্য করে।",
+                voiceError: "ভয়েস পাওয়া যাচ্ছে না।"
+            }
+        };
+
+        // Get translation
+        function t(key) {
+            const lang = translations[selectedLanguage] || translations.en;
+            return lang[key] || translations.en[key];
+        }
+
+        // Language functions - handled in inline script above
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            renderContacts();
+            renderFamilyContacts();
+            renderTips();
+            initMap();
+            fetchWeather();
+        });
+            
+            // Report page
+            if(contactsHeader[2]) contactsHeader[2].textContent = at('report');
+            
+            // Form labels
+            const formLabels = document.querySelectorAll('.form-group label');
+            if(formLabels[0]) formLabels[0].textContent = at('incidentCategory');
+            if(formLabels[1]) formLabels[1].textContent = at('location');
+            if(formLabels[2]) formLabels[2].textContent = at('description');
+            if(formLabels[3]) formLabels[3].textContent = at('uploadPhoto');
+            if(formLabels[4]) formLabels[4].textContent = at('anonymous');
+            
+            // Form select
+            const selectOpt = document.querySelector('#incidentCategory option');
+            if(selectOpt) document.querySelector('#incidentCategory').innerHTML = `
+                <option value="">${at('selectCategory')}</option>
+                <option value="theft">${at('theft')}</option>
+                <option value="harassment">${at('harassment')}</option>
+                <option value="suspicious">${at('suspicious')}</option>
+                <option value="accident">${at('accident')}</option>
+                <option value="fire">${at('fire')}</option>
+                <option value="medical">${at('medical')}</option>
+                <option value="other">${at('other')}</option>
+            `;
+            
+            // Submit button
+            const submitBtn = document.querySelector('#reportForm .submit-btn span');
+            if(submitBtn) submitBtn.parentElement.innerHTML = `<span>${at('submitReport')}</span>`;
+            
+            // Tips page
+            const tipsHeader = document.querySelectorAll('.section-header h2');
+            if(tipsHeader[3]) tipsHeader[3].textContent = at('tips');
+            
+            // Search
+            const searchInput = document.querySelector('#tipsSearch');
+            if(searchInput) searchInput.placeholder = at('searchTips');
+            
+            // Map page
+            if(tipsHeader[4]) tipsHeader[4].textContent = at('map');
+            
+            // Map filters
+            const filterBtns = document.querySelectorAll('.filter-btn');
+            if(filterBtns[0]) filterBtns[0].innerHTML = `<i class="fas fa-layer-group"></i> ${at('all')}`;
+            if(filterBtns[1]) filterBtns[1].innerHTML = `<i class="fas fa-shield-alt"></i> ${at('police')}`;
+            if(filterBtns[2]) filterBtns[2].innerHTML = `<i class="fas fa-hospital"></i> ${at('hospital')}`;
+            if(filterBtns[3]) filterBtns[3].innerHTML = `<i class="fas fa-fire"></i> ${at('fireStation')}`;
+            if(filterBtns[4]) filterBtns[4].innerHTML = `<i class="fas fa-pills"></i> ${at('medicalStore')}`;
+            if(filterBtns[5]) filterBtns[5].innerHTML = `<i class="fas fa-gas-pump"></i> ${at('petrolBunk')}`;
+            if(filterBtns[6]) filterBtns[6].innerHTML = `<i class="fas fa-sync-alt"></i> ${at('refresh')}`;
+            
+            // Location info
+            const locInfo = document.querySelector('#locationInfo h4');
+            if(locInfo) locInfo.innerHTML = `<i class="fas fa-map-marker-alt"></i> ${at('yourLocation')}`;
+            
+            // Chatbot
+            const chatbotHeader = document.querySelector('.chatbot-header span');
+            if(chatbotHeader) chatbotHeader.innerHTML = `<i class="fas fa-robot"></i> ${at('chatbotTitle')}`;
+            
+            const chatOptions = document.querySelectorAll('.chatbot-options button');
+            if(chatOptions[0]) chatOptions[0].innerHTML = '🚨 SOS';
+            if(chatOptions[1]) chatOptions[1].innerHTML = '📢 ' + at('report');
+            if(chatOptions[2]) chatOptions[2].innerHTML = '📞 ' + at('contacts');
+            if(chatOptions[3]) chatOptions[3].innerHTML = '💡 ' + at('tips');
+            if(chatOptions[4]) chatOptions[4].innerHTML = '🗺️ ' + at('map');
+            if(chatOptions[5]) chatOptions[5].innerHTML = '🌪️ Disaster';
+            
+            const chatInput = document.querySelector('#chatInput');
+            if(chatInput) chatInput.placeholder = at('typeMessage');
+            
+            // Form placeholders
+            const incidentLocation = document.getElementById('incidentLocation');
+            if(incidentLocation) incidentLocation.placeholder = at('enterLocation');
+            
+            const incidentDesc = document.getElementById('incidentDescription');
+            if(incidentDesc) incidentDesc.placeholder = at('describeIncident');
+            
+            const photoUpload = document.querySelector('.form-group p');
+            if(photoUpload && photoUpload.textContent.includes('Tap')) photoUpload.textContent = at('tapPhoto');
+            
+            // Anonymous toggle
+            const anonLabels = document.querySelectorAll('.toggle-container span');
+            if(anonLabels[0]) anonLabels[0].textContent = at('submitAnonymously');
+            
+            // Language modal
+            const langHeader = document.querySelector('.language-header h2');
+            if(langHeader) langHeader.textContent = at('selectLanguage');
+            
+            const langContinue = document.querySelector('#languageModal .submit-btn');
+            if(langContinue) langContinue.innerHTML = `${at('continue')} <i class="fas fa-arrow-right"></i>`;
+            
+            // Weather
+            const weatherTitle = document.getElementById('weatherTitle');
+            if(weatherTitle) weatherTitle.textContent = at('weather');
+            
+            // Refresh weather
+            fetchWeather();
+        }
+
+        // Chatbot functions
+        function toggleChatbot() {
+            const chatbot = document.getElementById('chatbot');
+            chatbot.classList.toggle('active');
+        }
+
+        function handleChatKey(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            if (!message) return;
+
+            addMessage(message, 'user');
+            input.value = '';
+
+            setTimeout(() => {
+                processMessage(message);
+            }, 500);
+        }
+
+        function addMessage(text, sender) {
+            const container = document.getElementById('chatMessages');
+            const div = document.createElement('div');
+            div.className = `chatbot-msg ${sender}`;
+            div.innerHTML = `<span>${text}</span>`;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function processMessage(message) {
+            const msg = message.toLowerCase();
+            let response = t('notUnderstood');
+
+            if (msg.includes('sos') || msg.includes('emergency') || msg.includes('मदद') || msg.includes('आपातकाल')) {
+                response = t('sosHelp');
+            } else if (msg.includes('report') || msg.includes('शिकायत') || msg.includes('रिपोर्ट')) {
+                response = t('reportHelp');
+            } else if (msg.includes('contact') || msg.includes('संपर्क') || msg.includes('फोन')) {
+                response = t('contactsHelp');
+            } else if (msg.includes('tip') || msg.includes('safety') || msg.includes('सुरक्षा') || msg.includes('टिप')) {
+                response = t('tipsHelp');
+            } else if (msg.includes('map') || msg.includes('nearby') || msg.includes('नक्शा') || msg.includes('स्थान')) {
+                response = t('mapHelp');
+            } else if (msg.includes('hello') || msg.includes('hi') || msg.includes('नमस्ते') || msg.includes('নমস্কার')) {
+                response = t('welcome');
+            } else if (msg.includes('how') || msg.includes('use') || msg.includes('कैसे') || msg.includes('কীভাবে')) {
+                response = t('howToUse');
+            } else if (msg.includes('disaster') || msg.includes('earthquake') || msg.includes('flood') || msg.includes('cyclone') || msg.includes('lightning') || msg.includes('heat') || msg.includes('बाढ़') || msg.includes('भूकंप') || msg.includes('तूफान')) {
+                response = t('disasterHelp') || 'Natural Disaster tips: Earthquake - DROP, COVER, HOLD ON. Flood - Move to high ground. Cyclone - Stay indoors. Lightning - Avoid open areas. Heat Wave - Stay hydrated.';
+            }
+
+            addMessage(response, 'bot');
+            speak(response);
+        }
+
+        function showHelp(topic) {
+            let response = '';
+            switch(topic) {
+                case 'sos': response = t('sosHelp'); break;
+                case 'report': response = t('reportHelp'); break;
+                case 'contacts': response = t('contactsHelp'); break;
+                case 'tips': response = t('tipsHelp'); break;
+                case 'map': response = t('mapHelp'); break;
+                case 'disaster': response = t('disasterHelp') || 'Natural Disaster tips: Earthquake - DROP, COVER, HOLD ON. Flood - Move to high ground. Cyclone - Stay indoors. Lightning - Avoid open areas. Heat Wave - Stay hydrated.'; break;
+            }
+            addMessage(response, 'bot');
+            speak(response);
+        }
+
+        // Voice Input
+        function startVoiceInput() {
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                showToast(t('voiceError'), 'error');
+                return;
+            }
+
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            const recognition = new SpeechRecognition();
+            recognition.lang = selectedLanguage === 'en' ? 'en-IN' : selectedLanguage + '-IN';
+            recognition.interimResults = false;
+
+            const btn = document.querySelector('.chatbot-input button');
+            btn.classList.add('listening');
+            btn.innerHTML = '<i class="fas fa-microphone"></i>';
+
+            recognition.onstart = function() {
+                showToast(t('listening'), 'info');
+            };
+
+            recognition.onresult = function(event) {
+                const transcript = event.results[0][0].transcript;
+                document.getElementById('chatInput').value = transcript;
+                btn.classList.remove('listening');
+                btn.innerHTML = '<i class="fas fa-paper-plane"></i>';
+                sendMessage();
+            };
+
+            recognition.onerror = function(event) {
+                btn.classList.remove('listening');
+                btn.innerHTML = '<i class="fas fa-paper-plane"></i>';
+                showToast(t('voiceError'), 'error');
+            };
+
+            recognition.onend = function() {
+                btn.classList.remove('listening');
+                btn.innerHTML = '<i class="fas fa-paper-plane"></i>';
+            };
+
+            recognition.start();
+        }
+
+        // Text to Speech
+        function speak(text) {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = selectedLanguage === 'en' ? 'en-IN' : selectedLanguage + '-IN';
+                utterance.rate = 0.9;
+                utterance.pitch = 1;
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        // Data
+        const defaultContacts = [
+            { id: 1, name: 'Police', number: '100', icon: 'blue', iconClass: 'fa-shield-alt' },
+            { id: 2, name: 'Fire Service', number: '101', icon: 'red', iconClass: 'fa-fire' },
+            { id: 3, name: 'Ambulance', number: '102', icon: 'green', iconClass: 'fa-ambulance' },
+            { id: 4, name: 'Campus Security', number: '911', icon: 'purple', iconClass: 'fa-user-shield' },
+            { id: 5, name: 'Women Helpline', number: '1091', icon: 'orange', iconClass: 'fa-female' },
+            { id: 6, name: 'Child Helpline', number: '1098', icon: 'teal', iconClass: 'fa-child' }
+        ];
+
+        const safetyTips = [
+            {
+                id: 1,
+                category: 'personal',
+                categoryLabel: 'Personal Safety',
+                title: 'Stay Aware of Your Surroundings',
+                icon: 'personal',
+                iconClass: 'fa-eye',
+                steps: [
+                    { num: 1, title: 'Scan Your Area', desc: 'Look around and notice people and places', icon: 'fa-eye' },
+                    { num: 2, title: 'Avoid Distractions', desc: 'Put away headphones and phone', icon: 'fa-mobile-alt' },
+                    { num: 3, title: 'Stay on Main Roads', desc: 'Use well-lit, busy streets', icon: 'fa-road' },
+                    { num: 4, title: 'Trust Your Gut', desc: 'If something feels wrong, leave immediately', icon: 'fa-exclamation-triangle' },
+                    { num: 5, title: 'Share Location', desc: 'Let trusted friends know your whereabouts', icon: 'fa-share-alt' }
+                ],
+                tips: [
+                    'Avoid using headphones while walking alone',
+                    'Stay on well-lit, populated streets',
+                    'Trust your instincts - if something feels wrong, leave',
+                    'Share your location with trusted friends',
+                    'Keep emergency numbers saved offline'
+                ]
+            },
+            {
+                id: 2,
+                category: 'road',
+                categoryLabel: 'Road Safety',
+                title: 'Road Safety Guidelines',
+                icon: 'road',
+                iconClass: 'fa-car',
+                steps: [
+                    { num: 1, title: 'Wear Helmet', desc: 'Always wear ISI-marked helmet', icon: 'fa-hard-hat' },
+                    { num: 2, title: 'Check Vehicle', desc: 'Before riding, check brakes and lights', icon: 'fa-tools' },
+                    { num: 3, title: 'Follow Rules', desc: 'Obey traffic signals and speed limits', icon: 'fa-stop' },
+                    { num: 4, title: 'Stay Alert', desc: 'Avoid phone calls while driving', icon: 'fa-bell' },
+                    { num: 5, title: 'Use Crosswalks', desc: 'Cross roads only at designated places', icon: 'fa-walking' }
+                ],
+                tips: [
+                    'Always wear a helmet when riding two-wheelers',
+                    'Follow traffic signals and signs',
+                    'Use crosswalks and pedestrian crossings',
+                    'Avoid using phone while walking on roads',
+                    'Stay visible at night with reflective clothing'
+                ]
+            },
+            {
+                id: 3,
+                category: 'cyber',
+                categoryLabel: 'Cyber Safety',
+                title: 'Online Safety Tips',
+                icon: 'cyber',
+                iconClass: 'fa-laptop',
+                steps: [
+                    { num: 1, title: 'Strong Password', desc: 'Create 12+ char password with mix', icon: 'fa-key' },
+                    { num: 2, title: '2FA Enable', desc: 'Turn on two-factor authentication', icon: 'fa-shield-alt' },
+                    { num: 3, title: 'Verify Links', desc: 'Check URL before clicking', icon: 'fa-link' },
+                    { num: 4, title: 'Never Share OTP', desc: 'Banks never ask for OTP', icon: 'fa-lock' },
+                    { num: 5, title: 'Secure WiFi', desc: 'Avoid public WiFi for banking', icon: 'fa-wifi' }
+                ],
+                tips: [
+                    'Use strong, unique passwords for each account',
+                    'Enable two-factor authentication',
+                    'Never share OTP or PIN with anyone',
+                    'Verify URLs before entering personal information',
+                    'Be cautious of unknown links and attachments'
+                ]
+            },
+            {
+                id: 4,
+                category: 'fire',
+                categoryLabel: 'Fire Safety',
+                title: 'Fire Emergency Tips',
+                icon: 'fire',
+                iconClass: 'fa-fire-extinguisher',
+                steps: [
+                    { num: 1, title: 'Alert Others', desc: 'Shout "Fire!" to warn people', icon: 'fa-bullhorn' },
+                    { num: 2, title: 'Stay Low', desc: 'Crawl below smoke to exit', icon: 'fa-arrow-down' },
+                    { num: 3, title: 'Cover Nose', desc: 'Use cloth to filter smoke', icon: 'fa-wind' },
+                    { num: 4, title: 'Use Exit', desc: 'Follow emergency route signs', icon: 'fa-door-open' },
+                    { num: 5, title: 'Call 101', desc: 'Alert fire service from safe spot', icon: 'fa-phone-alt' }
+                ],
+                tips: [
+                    'Know the location of fire extinguishers',
+                    'In case of fire, stay low and cover mouth',
+                    'Never use elevators during fire',
+                    'Know your building evacuation routes',
+                    'Call fire service immediately: 101'
+                ]
+            },
+            {
+                id: 5,
+                category: 'medical',
+                categoryLabel: 'First Aid',
+                title: 'Basic First Aid Knowledge',
+                icon: 'medical',
+                iconClass: 'fa-first-aid',
+                steps: [
+                    { num: 1, title: 'Stay Calm', desc: 'Assess the situation safely first', icon: 'fa-heart' },
+                    { num: 2, title: 'Call Help', desc: 'Dial 102 for ambulance', icon: 'fa-ambulance' },
+                    { num: 3, title: 'Stop Bleeding', desc: 'Apply pressure with clean cloth', icon: 'fa-hand-paper' },
+                    { num: 4, title: 'Treat Burns', desc: 'Run cool water for 10-15 mins', icon: 'fa-tint' },
+                    { num: 5, title: 'CPR if Needed', desc: '30 chest compressions + 2 breaths', icon: 'fa-hands-helping' }
+                ],
+                tips: [
+                    'For bleeding: apply pressure with clean cloth',
+                    'For burns: run cool water for 10 minutes',
+                    'For choking: perform Heimlich maneuver',
+                    'For cardiac arrest: start CPR immediately',
+                    'Keep emergency numbers accessible'
+                ]
+            },
+            {
+                id: 6,
+                category: 'disaster',
+                categoryLabel: 'Natural Disaster',
+                title: 'Earthquake Safety',
+                icon: 'disaster',
+                iconClass: 'fa-exclamation-circle',
+                steps: [
+                    { num: 1, title: 'DROP', desc: 'Drop to your hands and knees', icon: 'fa-arrow-down' },
+                    { num: 2, title: 'COVER', desc: 'Cover your head under sturdy furniture', icon: 'fa-hand-paper' },
+                    { num: 3, title: 'HOLD ON', desc: 'Hold on until shaking stops', icon: 'fa-handshake' },
+                    { num: 4, title: 'Stay Inside', desc: 'DO NOT run outside during quake', icon: 'fa-home' },
+                    { num: 5, title: 'After Quake', desc: 'Exit carefully, expect aftershocks', icon: 'fa-running' }
+                ],
+                tips: [
+                    'Stay calm and do not panic',
+                    'If outdoors: Move away from buildings and power lines',
+                    'If driving: Stop safely away from bridges and overpasses',
+                    'Keep emergency kit ready',
+                    'Know your evacuation routes'
+                ]
+            },
+            {
+                id: 7,
+                category: 'disaster',
+                categoryLabel: 'Natural Disaster',
+                title: 'Flood Safety',
+                icon: 'disaster',
+                iconClass: 'fa-water',
+                steps: [
+                    { num: 1, title: 'Move to High Ground', desc: 'Go to higher elevation immediately', icon: 'fa-arrow-up' },
+                    { num: 2, title: 'Avoid Walking', desc: "Do not walk in moving water", icon: 'fa-walking' },
+                    { num: 3, title: 'Stay Indoors', desc: 'Remain on higher floors', icon: 'fa-building' },
+                    { num: 4, title: 'Avoid Electrical', desc: 'Stay away from electrical equipment', icon: 'fa-bolt' },
+                    { num: 5, title: 'Wait for Rescue', desc: 'Signal for help if trapped', icon: 'fa-flag' }
+                ],
+                tips: [
+                    'Never walk or drive through flood water',
+                    'Turn off electricity at main switch',
+                    'Move to roof if trapped in building',
+                    'Do not drink flood water',
+                    'Listen to emergency broadcasts'
+                ]
+            },
+            {
+                id: 8,
+                category: 'disaster',
+                categoryLabel: 'Natural Disaster',
+                title: 'Cyclone & Storm Safety',
+                icon: 'disaster',
+                iconClass: 'fa-wind',
+                steps: [
+                    { num: 1, title: 'Stay Informed', desc: 'Listen to weather warnings', icon: 'fa-tv' },
+                    { num: 2, title: 'Secure Home', desc: 'Board windows, bring outdoor items inside', icon: 'fa-house-damage' },
+                    { num: 3, title: 'Emergency Kit', desc: 'Keep ready: water, food, flashlight', icon: 'fa-kit-medical' },
+                    { num: 4, title: 'Stay Inside', desc: 'Remain away from windows and doors', icon: 'fa-door-closed' },
+                    { num: 5, title: 'After Storm', desc: 'Check for damage before going out', icon: 'fa-search' }
+                ],
+                tips: [
+                    'Keep emergency contacts handy',
+                    'Fill buckets and tubs with water',
+                    'Charge phones and power banks',
+                    'Park vehicles away from trees',
+                    'Follow evacuation orders immediately'
+                ]
+            },
+            {
+                id: 9,
+                category: 'disaster',
+                categoryLabel: 'Natural Disaster',
+                title: 'Lightning Safety',
+                icon: 'disaster',
+                iconClass: 'fa-bolt',
+                steps: [
+                    { num: 1, title: 'Seek Shelter', desc: 'Go indoors immediately', icon: 'fa-home' },
+                    { num: 2, title: 'Avoid Open Areas', desc: 'Do not stand in open fields', icon: 'fa-field' },
+                    { num: 3, title: 'Stay Away', desc: 'Avoid trees, poles, metal objects', icon: 'fa-tree' },
+                    { num: 4, title: 'Crouch Low', desc: 'If outdoors with no shelter, crouch', icon: 'fa-child' },
+                    { num: 5, title: 'Wait 30 Mins', desc: 'Stay inside 30 min after last thunder', icon: 'fa-clock' }
+                ],
+                tips: [
+                    'Stay away from swimming pools',
+                    'Do not use landline phones',
+                    'Unplug electrical appliances',
+                    'Avoid concrete floors and walls',
+                    'If someone is struck, give CPR'
+                ]
+            },
+            {
+                id: 10,
+                category: 'disaster',
+                categoryLabel: 'Natural Disaster',
+                title: 'Heat Wave Safety',
+                icon: 'disaster',
+                iconClass: 'fa-temperature-high',
+                steps: [
+                    { num: 1, title: 'Stay Hydrated', desc: 'Drink water every 15-20 mins', icon: 'fa-tint' },
+                    { num: 2, title: 'Avoid Sun', desc: 'Stay indoors during peak hours', icon: 'fa-home' },
+                    { num: 3, title: 'Light Clothes', desc: 'Wear light, loose cotton clothes', icon: 'fa-tshirt' },
+                    { num: 4, title: 'Cool Body', desc: 'Use wet cloth, take cool baths', icon: 'fa-bath' },
+                    { num: 5, title: 'Check Others', desc: 'Help elderly and children', icon: 'fa-users' }
+                ],
+                tips: [
+                    'Never leave children in parked cars',
+                    'Avoid strenuous activities',
+                    'Use umbrella or cap outdoors',
+                    'Eat light, easy-to-digest food',
+                    'Know heat stroke symptoms'
+                ]
+            }
+        ];
+
+        const safeZones = [];
+        let nearbyPlaces = { police: [], hospital: [], pharmacy: [], fire: [] };
+
+        // State
+        let contacts = [...defaultContacts];
+        let bookmarks = JSON.parse(localStorage.getItem('safeguard_bookmarks')) || [];
+        let familyContacts = JSON.parse(localStorage.getItem('safeguard_family_contacts')) || [];
+        let map, userMarker, zoneMarkers = [];
+        let currentFilter = 'all';
+        let userLat = 28.6139, userLng = 77.2090;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            // Apply saved language
+            let savedLang = localStorage.getItem('safeguard_language');
+            if(savedLang) {
+                selectedLanguage = savedLang;
+                updateAppLanguage();
+            }
+            
+            renderContacts();
+            renderFamilyContacts();
+            renderTips();
+            initMap();
+            fetchWeather();
+        });
+
+        // Navigation
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+            
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            const navMap = { 'home': 0, 'contacts': 1, 'report': 2, 'tips': 3, 'map': 4 };
+            if (navMap[pageId] !== undefined) {
+                document.querySelectorAll('.nav-item')[navMap[pageId]].classList.add('active');
+            }
+
+            document.querySelectorAll('.sidebar-menu a').forEach(a => a.classList.remove('active'));
+            const sidebarMap = { 'home': 0, 'contacts': 1, 'report': 2, 'tips': 3, 'map': 4 };
+            if (sidebarMap[pageId] !== undefined) {
+                document.querySelectorAll('.sidebar-menu a')[sidebarMap[pageId]].classList.add('active');
+            }
+
+            toggleSidebar(false);
+            
+            if (pageId === 'map') {
+                setTimeout(() => {
+                    if (map) map.invalidateSize();
+                }, 100);
+            }
+        }
+
+        function toggleSidebar(force) {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            if (force === false) {
+                sidebar.classList.remove('active');
+                overlay.classList.remove('active');
+            } else {
+                sidebar.classList.toggle('active');
+                overlay.classList.toggle('active');
+            }
+        }
+
+        // Contacts with translations
+        const contactNames = {
+            en: { police: 'Police', fire: 'Fire Service', ambulance: 'Ambulance', security: 'Campus Security', women: 'Women Helpline', child: 'Child Helpline' },
+            hi: { police: 'पुलिस', fire: 'फायर सर्विस', ambulance: 'एम्बुलेंस', security: 'कैंपस सिक्योरिटी', women: 'महिला हेल्पलाइन', child: 'बाल हेल्पलाइन' },
+            te: { police: 'পুলিশ', fire: 'ఫైర్', ambulance: 'ambulance', security: 'security', women: 'women helpline', child: 'child helpline' },
+            ta: { police: 'போலீஸ்', fire: 'தீயணைப்பு', ambulance: 'அம்புலன்ஸ்', security: 'பாதுகாப்பு', women: 'பெண்கள் உதவி', child: 'குழந்தைகள் உதவி' },
+            bn: { police: 'পুলিশ', fire: 'ফায়ার', ambulance: 'অ্যাম্বুলেন্স', security: 'নিরাপত্তা', women: 'মহিলা হেল্পলাইন', child: 'শিশু হেল্পলাইন' },
+            mr: { police: 'पोलिस', fire: 'फायर', ambulance: 'रुग्णवाहिका', security: 'सुरक्षा', women: 'महिला हेल्पलाइन', child: 'बाल हेल्पलाइन' }
+        };
+
+        function getContactName(key) {
+            const names = contactNames[selectedLanguage] || contactNames.en;
+            return names[key] || contactNames.en[key];
+        }
+
+        // Contacts
+        function renderContacts() {
+            const grid = document.getElementById('contactsList');
+            const translatedContacts = [
+                { id: 1, name: getContactName('police'), number: '100', icon: 'blue', iconClass: 'fa-shield-alt' },
+                { id: 2, name: getContactName('fire'), number: '101', icon: 'red', iconClass: 'fa-fire' },
+                { id: 3, name: getContactName('ambulance'), number: '102', icon: 'green', iconClass: 'fa-ambulance' },
+                { id: 4, name: getContactName('security'), number: '911', icon: 'purple', iconClass: 'fa-user-shield' },
+                { id: 5, name: getContactName('women'), number: '1091', icon: 'orange', iconClass: 'fa-female' },
+                { id: 6, name: getContactName('child'), number: '1098', icon: 'teal', iconClass: 'fa-child' }
+            ];
+            
+            grid.innerHTML = translatedContacts.map(c => `
+                <div class="contact-card">
+                    <div class="contact-icon ${c.icon}">
+                        <i class="fas ${c.iconClass}"></i>
+                    </div>
+                    <div class="contact-info">
+                        <h3>${c.name}</h3>
+                        <p>${c.number}</p>
+                    </div>
+                    <button class="call-btn" onclick="callContact('${c.number}')">
+                        <i class="fas fa-phone-alt"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function callContact(number) {
+            window.location.href = `tel:${number}`;
+        }
+
+        // Family Contacts
+        function renderFamilyContacts() {
+            const grid = document.getElementById('familyContactsList');
+            if (familyContacts.length === 0) {
+                grid.innerHTML = `
+                    <div style="grid-column: 1/-1;text-align:center;padding:40px;color:#7F8C8D;">
+                        <i class="fas fa-user-friends" style="font-size:40px;margin-bottom:16px;"></i>
+                        <p>No family contacts added yet</p>
+                        <p style="font-size:14px;">Tap "Add" to add family members</p>
+                    </div>
+                `;
+                return;
+            }
+            const colors = ['blue', 'green', 'purple', 'orange', 'teal', 'red'];
+            const icons = ['fa-user', 'fa-user-friends', 'fa-child', 'fa-old-man', 'fa-female', 'fa-male'];
+            grid.innerHTML = familyContacts.map((c, index) => `
+                <div class="contact-card">
+                    <div class="contact-icon ${colors[index % colors.length]}">
+                        <i class="fas ${icons[index % icons.length]}"></i>
+                    </div>
+                    <div class="contact-info">
+                        <h3>${c.name}</h3>
+                        <p>${c.relation} - ${c.number}</p>
+                    </div>
+                    <button class="call-btn" onclick="callContact('${c.number}')">
+                        <i class="fas fa-phone-alt"></i>
+                    </button>
+                    <button style="margin-left:8px;width:40px;height:40px;border-radius:50%;background:#E74C3C;border:none;color:white;font-size:16px;cursor:pointer;" onclick="deleteFamilyContact(${c.id})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function showAddFamilyModal() {
+            const name = prompt(at('enterName'));
+            if (!name) return;
+            const number = prompt(at('enterNumber'));
+            if (!number) return;
+            const relation = prompt(at('enterRelation'));
+            if (!relation) return;
+            
+            const newContact = {
+                id: Date.now(),
+                name: name,
+                number: number,
+                relation: relation
+            };
+            
+            familyContacts.push(newContact);
+            localStorage.setItem('safeguard_family_contacts', JSON.stringify(familyContacts));
+            renderFamilyContacts();
+            showToast(at('familyAdded'), 'success');
+        }
+
+        function deleteFamilyContact(id) {
+            if (confirm(at('deleteConfirm'))) {
+                familyContacts = familyContacts.filter(c => c.id !== id);
+                localStorage.setItem('safeguard_family_contacts', JSON.stringify(familyContacts));
+                renderFamilyContacts();
+                showToast('Contact deleted', 'info');
+            }
+        }
+
+        // SOS
+        function triggerSOS() {
+            document.getElementById('sosModal').classList.add('active');
+        }
+
+        function closeSOSModal() {
+            document.getElementById('sosModal').classList.remove('active');
+        }
+
+        function confirmSOS() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    async (position) => {
+                        const { latitude, longitude } = position.coords;
+                        
+                        // Find nearest police station
+                        let nearestPolice = null;
+                        let minDistance = Infinity;
+                        
+                        if (nearbyPlaces.police && nearbyPlaces.police.length > 0) {
+                            nearbyPlaces.police.forEach(police => {
+                                const dist = getDistance(latitude, longitude, police.lat, police.lng);
+                                if (dist < minDistance) {
+                                    minDistance = dist;
+                                    nearestPolice = police;
+                                }
+                            });
+                        }
+                        
+                        // Check internet connectivity
+                        const isOnline = navigator.onLine;
+                        
+                        // Build messages
+                        let locationLink = '';
+                        if (isOnline) {
+                            locationLink = `Location: https://maps.google.com/?q=${latitude},${longitude}`;
+                        } else {
+                            locationLink = `Location: Lat ${latitude.toFixed(4)}, Lng ${longitude.toFixed(4)}`;
+                        }
+                        
+                        const emergencyMsg = `SOS EMERGENCY! I need help immediately!\n\n${locationLink}\n\nNearest Police: ${nearestPolice ? nearestPolice.name + ' (' + nearestPolice.address + ')' : 'Call 100'}\n\nPlease help me!`;
+                        const familyMsg = `SOS ALERT! I need help!\n\n${locationLink}\n\nPlease contact me immediately or call police at 100.`;
+                        
+                        // Get family contacts
+                        const familyNumbers = familyContacts.map(c => c.number).filter(n => n);
+                        
+                        showToast('Sending SOS alerts...', 'info');
+                        closeSOSModal();
+                        
+                        // Send (100)
+                        window.location.href = `sms:100?body=${encodeURIComponent(emergencyMsg)}`;
+                        
+                        // info about family
+                        if (familyNumbers.length > 0) {
+                            setTimeout(() => {
+                                showToast(`Alert also sent to ${familyNumbers.length} family members!`, 'success');
+                            }, 2000);
+                        }
+                        
+                        if (!isOnline) {
+                            showToast('Offline - SMS sent without map link', 'error');
+                        }
+                    },
+                    (error) => {
+                        // No GPS - send basic emergency message
+                        const emergencyMsg = 'SOS EMERGENCY! I need help! Please call 100 immediately!';
+                        const familyMsg = 'SOS ALERT! I need help! Please contact me!';
+                        
+                        showToast('Location unavailable. Sending emergency SMS...', 'error');
+                        closeSOSModal();
+                        
+                        window.location.href = `sms:100?body=${encodeURIComponent(emergencyMsg)}`;
+                    }
+                );
+            } else {
+                showToast('Geolocation not supported', 'error');
+                closeSOSModal();
+            }
+        }
+
+        // Calculate distance between two points (Haversine formula)
+        function getDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371; // Earth's radius in km
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                      Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+
+        // Send SMS to family contacts
+        function sendFamilyAlert(message) {
+            if (familyContacts.length === 0) {
+                showToast('No family contacts added!', 'error');
+                return;
+            }
+            
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const { latitude, longitude } = position.coords;
+                        const isOnline = navigator.onLine;
+                        
+                        let locationLink = '';
+                        if (isOnline) {
+                            locationLink = `My Location: https://maps.google.com/?q=${latitude},${longitude}`;
+                        } else {
+                            locationLink = `Location: Lat ${latitude.toFixed(4)}, Lng ${longitude.toFixed(4)}`;
+                        }
+                        
+                        const msg = message || `URGENT! I need help!\n\n${locationLink}\n\nPlease check on me or call for help!`;
+                        
+                        showToast(`Sending to ${familyContacts.length} family members...`, 'info');
+                        
+                        // Send to first family member
+                        window.location.href = `sms:${familyContacts[0].number}?body=${encodeURIComponent(msg)}`;
+                        
+                        // Show info about others
+                        if (familyContacts.length > 1) {
+                            setTimeout(() => {
+                                showToast(`${familyContacts.length - 1} more family alerts queued!`, 'success');
+                            }, 2000);
+                        }
+                    },
+                    () => {
+                        const msg = message || 'URGENT! I need help! Please check on me!';
+                        showToast('Location unavailable. Sending alert...', 'error');
+                        window.location.href = `sms:${familyContacts[0].number}?body=${encodeURIComponent(msg)}`;
+                    }
+                );
+            } else {
+                showToast('Geolocation not supported', 'error');
+            }
+        }
+
+        // Report
+        let isAnonymous = false;
+        function toggleAnonymous() {
+            isAnonymous = !isAnonymous;
+            document.getElementById('anonymousToggle').classList.toggle('active');
+        }
+
+        // Photo handling
+        let selectedPhoto = null;
+        
+        function previewPhoto(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    selectedPhoto = e.target.result;
+                    document.getElementById('previewImage').src = selectedPhoto;
+                    document.getElementById('photoPreview').style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+        
+        function removePhoto() {
+            selectedPhoto = null;
+            document.getElementById('photoInput').value = '';
+            document.getElementById('photoPreview').style.display = 'none';
+        }
+
+        function submitReport(e) {
+            e.preventDefault();
+            
+            const category = document.getElementById('incidentCategory').value;
+            const location = document.getElementById('incidentLocation').value;
+            const description = document.getElementById('incidentDescription').value;
+
+            if (description.length < 20) {
+                showToast('Description must be at least 20 characters', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('submitBtn');
+            btn.innerHTML = '<span class="loading"></span> Sending...';
+            btn.disabled = true;
+
+            // Get GPS location and find nearest police
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const { latitude, longitude } = position.coords;
+                        
+                        // Find nearest police station
+                        let nearestPolice = null;
+                        let minDistance = Infinity;
+                        
+                        if (nearbyPlaces.police && nearbyPlaces.police.length > 0) {
+                            nearbyPlaces.police.forEach(police => {
+                                const dist = getDistance(latitude, longitude, police.lat, police.lng);
+                                if (dist < minDistance) {
+                                    minDistance = dist;
+                                    nearestPolice = police;
+                                }
+                            });
+                        }
+                        
+                        // Build incident report message
+                        const categoryText = {
+                            'theft': 'THEFT',
+                            'harassment': 'HARASSMENT',
+                            'suspicious': 'SUSPICIOUS ACTIVITY',
+                            'accident': 'ACCIDENT',
+                            'fire': 'FIRE EMERGENCY',
+                            'medical': 'MEDICAL EMERGENCY',
+                            'other': 'OTHER INCIDENT'
+                        };
+                        
+                        const isOnline = navigator.onLine;
+                        let locationText = '';
+                        if (isOnline) {
+                            locationText = `Location: https://maps.google.com/?q=${latitude},${longitude}`;
+                        } else {
+                            locationText = `Location: Lat ${latitude.toFixed(4)}, Lng ${longitude.toFixed(4)}`;
+                        }
+                        
+                        const refId = 'REF-' + Math.random().toString(36).substr(2, 6).toUpperCase();
+                        
+                        const policeMsg = `🚨 INCIDENT REPORT 🚨\n\nCategory: ${categoryText[category]}\n${locationText}\nAddress: ${location}\nDescription: ${description}\nReference ID: ${refId}\n\nPlease take immediate action!`;
+                        
+                        const familyMsg = `📢 INCIDENT REPORTED\n\nCategory: ${categoryText[category]}\nLocation: ${location}\n${locationText}\nReference: ${refId}\n\nReported to police. Please check on me if needed.`;
+                        
+                        // Show loading
+                        setTimeout(() => {
+                            // Send to police
+                            window.location.href = `sms:100?body=${encodeURIComponent(policeMsg)}`;
+                            
+                            // Show success
+                            document.getElementById('refId').textContent = refId;
+                            
+                            // Reset form
+                            document.getElementById('reportForm').reset();
+                            removePhoto();
+                            btn.innerHTML = '<span>Submit Report</span>';
+                            btn.disabled = false;
+                            
+                            // Collect all contacts to notify
+                            let allContacts = [];
+                            let notifyCount = 0;
+                            
+                            // Add emergency contacts (except police 100)
+                            defaultContacts.forEach(c => {
+                                if (c.number !== '100' && !allContacts.includes(c.number)) {
+                                    allContacts.push({ number: c.number, name: c.name, type: 'emergency' });
+                                }
+                            });
+                            
+                            // Add family contacts if not anonymous
+                            if (!isAnonymous) {
+                                familyContacts.forEach(c => {
+                                    if (!allContacts.includes(c.number)) {
+                                        allContacts.push({ number: c.number, name: c.name, type: 'family' });
+                                    }
+                                });
+                            }
+                            
+                            showPage('reportSuccess');
+                            showToast(`Report sent to Police! + ${allContacts.length} other contacts`, 'success');
+                            
+                            // Send to all other contacts with delay
+                            if (allContacts.length > 0) {
+                                let delay = 2000;
+                                allContacts.forEach((contact, index) => {
+                                    setTimeout(() => {
+                                        window.location.href = `sms:${contact.number}?body=${encodeURIComponent(familyMsg)}`;
+                                    }, delay);
+                                    delay += 1500;
+                                });
+                            }
+                        }, 1500);
+                    },
+                    (error) => {
+                        // Location not available - send without location
+                        const refId = 'REF-' + Math.random().toString(36).substr(2, 6).toUpperCase();
+                        
+                        const policeMsg = `🚨 INCIDENT REPORT 🚨\n\nCategory: ${category}\nLocation: ${location}\nDescription: ${description}\nReference ID: ${refId}\n\nPlease take immediate action!`;
+                        
+                        const familyMsg = `📢 INCIDENT REPORTED\n\nCategory: ${category}\nLocation: ${location}\nReference: ${refId}\n\nReported to police. Please check on me if needed.`;
+                        
+                        setTimeout(() => {
+                            window.location.href = `sms:100?body=${encodeURIComponent(policeMsg)}`;
+                            
+                            document.getElementById('refId').textContent = refId;
+                            document.getElementById('reportForm').reset();
+                            removePhoto();
+                            btn.innerHTML = '<span>Submit Report</span>';
+                            btn.disabled = false;
+                            
+                            // Collect all contacts
+                            let allContacts = [];
+                            defaultContacts.forEach(c => {
+                                if (c.number !== '100' && !allContacts.includes(c.number)) {
+                                    allContacts.push({ number: c.number, name: c.name, type: 'emergency' });
+                                }
+                            });
+                            if (!isAnonymous) {
+                                familyContacts.forEach(c => {
+                                    if (!allContacts.includes(c.number)) {
+                                        allContacts.push({ number: c.number, name: c.name, type: 'family' });
+                                    }
+                                });
+                            }
+                            
+                            showPage('reportSuccess');
+                            showToast(`Report sent to Police! + ${allContacts.length} other contacts`, 'success');
+                            
+                            // Send to all other contacts
+                            if (allContacts.length > 0) {
+                                let delay = 2000;
+                                allContacts.forEach((contact, index) => {
+                                    setTimeout(() => {
+                                        window.location.href = `sms:${contact.number}?body=${encodeURIComponent(familyMsg)}`;
+                                    }, delay);
+                                    delay += 1500;
+                                });
+                            }
+                        }, 1500);
+                    }
+                );
+            } else {
+                // No geolocation - send basic report
+                const refId = 'REF-' + Math.random().toString(36).substr(2, 6).toUpperCase();
+                const policeMsg = `🚨 INCIDENT REPORT 🚨\n\nCategory: ${category}\nLocation: ${location}\nDescription: ${description}\nReference ID: ${refId}`;
+                
+                const familyMsg = `📢 INCIDENT REPORTED\n\nCategory: ${category}\nLocation: ${location}\nReference: ${refId}\n\nReported to police. Please check on me if needed.`;
+                
+                setTimeout(() => {
+                    window.location.href = `sms:100?body=${encodeURIComponent(policeMsg)}`;
+                    
+                    document.getElementById('refId').textContent = refId;
+                    document.getElementById('reportForm').reset();
+                    removePhoto();
+                    btn.innerHTML = '<span>Submit Report</span>';
+                    btn.disabled = false;
+                    
+                    // Collect all contacts
+                    let allContacts = [];
+                    defaultContacts.forEach(c => {
+                        if (c.number !== '100' && !allContacts.includes(c.number)) {
+                            allContacts.push({ number: c.number, name: c.name, type: 'emergency' });
+                        }
+                    });
+                    if (!isAnonymous) {
+                        familyContacts.forEach(c => {
+                            if (!allContacts.includes(c.number)) {
+                                allContacts.push({ number: c.number, name: c.name, type: 'family' });
+                            }
+                        });
+                    }
+                    
+                    showPage('reportSuccess');
+                    showToast(`Report sent to Police! + ${allContacts.length} other contacts`, 'success');
+                    
+                    // Send to all other contacts
+                    if (allContacts.length > 0) {
+                        let delay = 2000;
+                        allContacts.forEach((contact, index) => {
+                            setTimeout(() => {
+                                window.location.href = `sms:${contact.number}?body=${encodeURIComponent(familyMsg)}`;
+                            }, delay);
+                            delay += 1500;
+                        });
+                    }
+                }, 1500);
+            }
+        }
+
+        // Tips
+        function renderTips(filteredTips = safetyTips) {
+            const grid = document.getElementById('tipsList');
+            grid.innerHTML = filteredTips.map(t => `
+                <div class="tip-card" id="tip-${t.id}">
+                    <div class="tip-header" onclick="toggleTip(${t.id})">
+                        <div class="tip-icon ${t.icon}">
+                            <i class="fas ${t.iconClass}"></i>
+                        </div>
+                        <div class="tip-title">
+                            <h3>${t.title}</h3>
+                            <span>${t.categoryLabel}</span>
+                        </div>
+                        <button class="bookmark-btn ${bookmarks.includes(t.id) ? 'active' : ''}" onclick="toggleBookmark(event, ${t.id})">
+                            <i class="fas fa-bookmark"></i>
+                        </button>
+                        <i class="fas fa-chevron-down tip-expand"></i>
+                    </div>
+                    <div class="tip-content">
+                        <div class="tip-content-inner">
+                            ${t.steps ? `
+                                <h4 style="color:#1E3A5F;margin-bottom:16px;display:flex;align-items:center;gap:8px;">
+                                    <i class="fas fa-list-ol"></i> Step-by-Step Guide
+                                </h4>
+                                <div class="steps-container">
+                                    ${t.steps.map((step, idx) => `
+                                        <div class="step-item" style="display:flex;gap:12px;margin-bottom:16px;padding:12px;background:${idx % 2 === 0 ? '#f8f9fa' : 'white'};border-radius:10px;border-left:4px solid ${getStepColor(t.category)};">
+                                            <div class="step-number" style="width:40px;height:40px;min-width:40px;background:${getStepColor(t.category)};color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:18px;">
+                                                ${step.num}
+                                            </div>
+                                            <div class="step-content" style="flex:1;">
+                                                <h5 style="color:#2C3E50;margin-bottom:4px;display:flex;align-items:center;gap:8px;">
+                                                    <i class="fas ${step.icon}" style="color:${getStepColor(t.category)};"></i> ${step.title}
+                                                </h5>
+                                                <p style="color:#7F8C8D;font-size:13px;">${step.desc}</p>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                                <hr style="margin:20px 0;border:none;border-top:1px solid #eee;">
+                                <h4 style="color:#1E3A5F;margin-bottom:12px;"><i class="fas fa-lightbulb"></i> Quick Tips</h4>
+                            ` : ''}
+                            <ul style="${t.steps ? 'margin-top:0;' : ''}">
+                                ${t.tips.map(tip => `<li>${tip}</li>`).join('')}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function getStepColor(category) {
+            const colors = {
+                'personal': '#3498DB',
+                'road': '#F39C12',
+                'cyber': '#9B59B6',
+                'fire': '#E74C3C',
+                'medical': '#2ECC71',
+                'disaster': '#E67E22'
+            };
+            return colors[category] || '#1E3A5F';
+        }
+
+        function toggleTip(id) {
+            document.getElementById(`tip-${id}`).classList.toggle('expanded');
+        }
+
+        function toggleBookmark(e, id) {
+            e.stopPropagation();
+            if (bookmarks.includes(id)) {
+                bookmarks = bookmarks.filter(b => b !== id);
+            } else {
+                bookmarks.push(id);
+            }
+            localStorage.setItem('safeguard_bookmarks', JSON.stringify(bookmarks));
+            renderTips();
+        }
+
+        function filterTips() {
+            const search = document.getElementById('tipsSearch').value.toLowerCase();
+            const filtered = safetyTips.filter(t => 
+                t.title.toLowerCase().includes(search) || 
+                t.categoryLabel.toLowerCase().includes(search) ||
+                t.tips.some(tip => tip.toLowerCase().includes(search))
+            );
+            renderTips(filtered);
+        }
+
+        // Map
+        function initMap() {
+            map = L.map('map').setView([28.6139, 77.2090], 13);
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap'
+            }).addTo(map);
+
+            // Get user location and fetch nearby places
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        userLat = position.coords.latitude;
+                        userLng = position.coords.longitude;
+                        
+                        userMarker = L.marker([userLat, userLng], {
+                            icon: L.divIcon({
+                                className: 'user-marker',
+                                html: '<i class="fas fa-user-circle" style="color: #3498DB; font-size: 30px;"></i>',
+                                iconSize: [30, 30]
+                            })
+                        }).addTo(map).bindPopup('Your Location');
+                        map.setView([userLat, userLng], 14);
+                        document.getElementById('userLocation').textContent = `Lat: ${userLat.toFixed(4)}, Lng: ${userLng.toFixed(4)}`;
+                        
+                        // Fetch nearby places from OpenStreetMap
+                        fetchNearbyPlaces(userLat, userLng);
+                    },
+                    () => {
+                        document.getElementById('userLocation').textContent = 'Location access denied';
+                        fetchNearbyPlaces(28.6139, 77.2090); // Default to Delhi
+                    }
+                );
+            }
+        }
+
+        // Fetch nearby places from OpenStreetMap using Overpass API
+        async function fetchNearbyPlaces(lat, lng) {
+            const radius = 10000; // 10km radius
+            const query = `
+                [out:json][timeout:25];
+                (
+                    node["amenity"="police"](around:${radius},${lat},${lng});
+                    node["amenity"="hospital"](around:${radius},${lat},${lng});
+                    node["amenity"="doctors"](around:${radius},${lat},${lng});
+                    node["shop"="pharmacy"](around:${radius},${lat},${lng});
+                    node["amenity"="fire_station"](around:${radius},${lat},${lng});
+                    node["amenity"="fuel"](around:${radius},${lat},${lng});
+                );
+                out body;
+            `;
+            
+            try {
+                showToast('Finding nearby places...', 'info');
+                const response = await fetch('https://overpass-api.de/api/interpreter?data=' + encodeURIComponent(query));
+                const data = await response.json();
+                
+                // Clear existing markers
+                zoneMarkers.forEach(z => map.removeLayer(z.marker));
+                zoneMarkers = [];
+                nearbyPlaces = { police: [], hospital: [], pharmacy: [], fire: [], fuel: [] };
+                
+                data.elements.forEach(place => {
+                    let type = '';
+                    let name = place.tags.name || 'Unnamed';
+                    let icon = '';
+                    
+                    if (place.tags.amenity === 'police') {
+                        type = 'police';
+                        icon = 'fa-shield-alt';
+                    } else if (place.tags.amenity === 'hospital' || place.tags.amenity === 'doctors') {
+                        type = 'hospital';
+                        icon = 'fa-hospital';
+                    } else if (place.tags.shop === 'pharmacy') {
+                        type = 'pharmacy';
+                        icon = 'fa-pills';
+                    } else if (place.tags.amenity === 'fire_station') {
+                        type = 'fire';
+                        icon = 'fa-fire';
+                    } else if (place.tags.amenity === 'fuel') {
+                        type = 'fuel';
+                        icon = 'fa-gas-pump';
+                    }
+                    
+                    if (type) {
+                        const placeData = {
+                            name: name,
+                            lat: place.lat,
+                            lng: place.lon,
+                            type: type,
+                            address: place.tags['addr:street'] ? `${place.tags['addr:housenumber'] || ''} ${place.tags['addr:street'] || ''}`.trim() : 'Address not available',
+                            icon: icon
+                        };
+                        nearbyPlaces[type].push(placeData);
+                    }
+                });
+                
+                // Add all markers to map
+                addMarkersToMap();
+                
+                const totalPlaces = data.elements.length;
+                if (totalPlaces > 0) {
+                    showToast(`Found ${totalPlaces} nearby places!`, 'success');
+                } else {
+                    showToast('No places found nearby', 'info');
+                }
+                
+            } catch (error) {
+                console.error('Error fetching places:', error);
+                showToast('Could not fetch nearby places', 'error');
+            }
+        }
+
+        function addMarkersToMap() {
+            const allPlaces = [
+                ...nearbyPlaces.police.map(p => ({...p, color: '#3498DB'})),
+                ...nearbyPlaces.hospital.map(p => ({...p, color: '#E74C3C'})),
+                ...nearbyPlaces.pharmacy.map(p => ({...p, color: '#2ECC71'})),
+                ...nearbyPlaces.fire.map(p => ({...p, color: '#F39C12'})),
+                ...nearbyPlaces.fuel.map(p => ({...p, color: '#8E44AD'}))
+            ];
+            
+            allPlaces.forEach(place => {
+                const marker = L.marker([place.lat, place.lng], {
+                    icon: L.divIcon({
+                        className: 'custom-marker',
+                        html: `<div style="background:${place.color};color:white;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 2px 6px rgba(0,0,0,0.3);border:2px solid white;"><i class="fas ${place.icon}"></i></div>`,
+                        iconSize: [36, 36],
+                        iconAnchor: [18, 18]
+                    })
+                }).addTo(map);
+                
+                const dist = getDistance(userLat, userLng, place.lat, place.lng);
+                const distText = dist < 1 ? `${Math.round(dist * 1000)} m` : `${dist.toFixed(1)} km`;
+                
+                // Create directions URL with current user location
+                const currentUserLat = userLat;
+                const currentUserLng = userLng;
+                
+                marker.bindPopup(`
+                    <div style="min-width:220px;">
+                        <strong style="color:${place.color};">${place.name}</strong><br>
+                        <span style="font-size:12px;color:#666;">${place.type === 'police' ? 'Police Station' : place.type === 'hospital' ? 'Hospital/Clinic' : place.type === 'pharmacy' ? 'Pharmacy/Medical Store' : place.type === 'fire' ? 'Fire Station' : 'Petrol Bunk'}</span><br>
+                        <span style="font-size:11px;">${place.address}</span><br>
+                        <span style="font-size:12px;color:#E74C3C;font-weight:600;">📍 ${distText} away</span><br>
+                        <div style="margin-top:10px;">
+                            <a href="https://www.google.com/maps/dir/?api=1&destination=${place.lat},${place.lng}" target="_blank" style="display:block;background:#1E3A5F;color:white;padding:10px 12px;border-radius:6px;text-align:center;text-decoration:none;font-size:13px;font-weight:600;">🧭 Get Directions from Current Location</a>
+                        </div>
+                        <div style="margin-top:8px;">
+                            <a href="https://www.google.com/maps/search/?api=1&query=${place.lat},${place.lng}" target="_blank" style="display:block;background:#2ECC71;color:white;padding:10px 12px;border-radius:6px;text-align:center;text-decoration:none;font-size:13px;font-weight:600;">📱 Open in Maps</a>
+                        </div>
+                    </div>
+                `);
+                zoneMarkers.push({ marker, type: place.type });
+            });
+            
+            // Apply current filter
+            filterMap(currentFilter);
+        }
+
+        function refreshLocations() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        userLat = position.coords.latitude;
+                        userLng = position.coords.longitude;
+                        map.setView([userLat, userLng], 14);
+                        if (userMarker) {
+                            userMarker.setLatLng([userLat, userLng]);
+                        }
+                        fetchNearbyPlaces(userLat, userLng);
+                    },
+                    () => {
+                        showToast('Could not get location', 'error');
+                    }
+                );
+            }
+        }
+
+        function filterMap(type) {
+            currentFilter = type;
+            
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.filter === type) btn.classList.add('active');
+            });
+
+            zoneMarkers.forEach(z => {
+                if (type === 'all' || z.type === type) {
+                    map.addLayer(z.marker);
+                } else {
+                    map.removeLayer(z.marker);
+                }
+            });
+        }
+
+        // Location Sharing
+        function shareLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const { latitude, longitude } = position.coords;
+                        const url = `https://maps.google.com/?q=${latitude},${longitude}`;
+                        
+                        if (navigator.share) {
+                            navigator.share({
+                                title: 'My Location',
+                                text: 'Here is my current location',
+                                url: url
+                            }).then(() => showToast('Location shared!', 'success'));
+                        } else {
+                            navigator.clipboard.writeText(url);
+                            showToast('Location copied to clipboard!', 'success');
+                        }
+                    },
+                    () => showToast('Could not get location', 'error')
+                );
+            }
+        }
+
+        // Toast
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `
+                <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-times-circle' : 'fa-info-circle'}"></i>
+                <span>${message}</span>
+            `;
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+    } catch(e) {
+        console.error('JavaScript Error:', e.message);
+        alert('Error: ' + e.message);
+    }
+    </script>
+</body>
+</html>
